@@ -2,7 +2,7 @@
 //--- 010 Editor v12.0 Binary Template
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
-//   Authors: Jille, Dark
+//   Authors: Jille, Dark, Borg123
 //   Version: 0.2
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
@@ -17,8 +17,9 @@
 // green    = confirmed
 // gray     = seemingly irrelevant
 // blue/aqua= special
+// purple   = potential checksum
 
-short unknown_1 <bgcolor=cYellow>; //some kind of checksum? 
+short unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
 short unknown_2 <bgcolor=cDkYellow>;
 short unknown_3 <bgcolor=cYellow>;
 short unknown_4 <bgcolor=cDkYellow>; 
@@ -94,6 +95,25 @@ struct{
     // Efficiency_eco_ST is always off
 }   ST_Phase[12] <bgcolor=cDkYellow>;
 
+FSeek(2064);
+  ushort unknown_x[32];// this seems to be the same rising ramp always		
+
+
+
+
+// Print a report to output 
+local int i = 0;
+local float x = 0;
+
+Printf (" %s \n", source_filename);
+Printf (" ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefaultProfile\tReverseProfile\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
+
+
+while(i<Amount_of_Defined_SoundProfiles_SP)
+    {
+        Printf (" %i\t%s\t%s\t%i\t\t%i\t%i\t\t%i\t\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", i, Car[i].Engine_code, Car[i].VIN_mask, Car[i].Charisma_01_Switch_Relapse_Clamp15, Car[i].Charisma_02_Switch_Gearbox, Car[i].Charisma_03_Default_driving_profile, Car[i].Charisma_04_Reverse_driving_profile,Car[i].Charisma_05_Comfort_driving_profile,Car[i].Charisma_06_Normal_driving_profile,Car[i].Charisma_07_Sport_driving_profile,Car[i].Charisma_08_Offroad_driving_profile,Car[i].Charisma_09_Eco_driving_profile,Car[i].Charisma_10_Race_driving_profile,Car[i].Charisma_11_GTE_driving_profile,Car[i].Reserved_for_future_use_1,Car[i].Reserved_for_future_use_2,Car[i].Reserved_for_future_use_3);
+        i = i+1;
+    } 
 
 										  
 										  
