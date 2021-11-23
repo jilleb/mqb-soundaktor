@@ -1,0 +1,102 @@
+//------------------------------------------------
+//--- 010 Editor v12.0 Binary Template
+//
+//      File: FL_xx__x.odx.FD_2DATA.BIN
+//   Authors: Jille, Dark
+//   Version: 0.2
+//   Purpose: Parse the contents of the MQB soundaktor firmware
+//  Category: 
+// File Mask: 
+//  ID Bytes: 
+//   History: 0.1 - Initial version
+//            0.2 - Additional field descriptions taken from MxCar sheet   
+//------------------------------------------------
+// legend: 
+// yellow   = uncertain
+// red      = unknown
+// green    = confirmed
+// gray     = seemingly irrelevant
+// blue/aqua= special
+
+short unknown_1 <bgcolor=cYellow>; //some kind of checksum? 
+short unknown_2 <bgcolor=cDkYellow>;
+short unknown_3 <bgcolor=cYellow>;
+short unknown_4 <bgcolor=cDkYellow>; 
+short unknown_5 <bgcolor=cYellow>; 
+short unknown_6 <bgcolor=cDkYellow>; 
+short unknown_7 <bgcolor=cYellow>; 
+short unknown_8 <bgcolor=cSilver>; // doesn't change between versions. 
+short unknown_9 <bgcolor=cSilver>; // doesn't change between versions. 
+short unknown_10 <bgcolor=cSilver>;// doesn't change between versions. 
+short unknown_11 <bgcolor=cSilver>;// doesn't change between versions. 
+short unknown_12 <bgcolor=cSilver>;// doesn't change between versions. 
+short unknown_13 <bgcolor=cLtBlue>;// doesn't change between versions. 
+short unknown_14 <bgcolor=cLtBlue>;// doesn't change between versions. 
+short unknown_15 <bgcolor=cLtBlue>;// doesn't change between versions. 
+short unknown_16 <bgcolor=cLtBlue>;// doesn't change between versions. 
+short unknown_17 <bgcolor=cLtBlue>;// doesn't change between versions. 
+short unknown_18 <bgcolor=cBlue>; // identical to unknown_25
+short unknown_19 <bgcolor=cYellow>; 
+short unknown_20 <bgcolor=cDkAqua>;  // identical to unknown_27
+FSeek(62);
+short source_filename_checksum <bgcolor=cGreen>;// CRC16-CCITT
+char source_filename[64] <bgcolor=cDkGreen>;
+short Amount_of_Defined_SoundProfiles_SP <bgcolor=cGreen>; 
+short Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
+short Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
+short Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
+short Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
+short Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
+
+// 0: 512 Support points, max 32 Signals 
+// 1: 1024 Support points, max 16 Signals  
+// 2: 2048 Support points, max 8 Signals
+// 3: 4096 Support points, max 4 Signals
+// 4: 8192 Support points, max 2 Signals
+
+short Damping_factor_foractuator_test <bgcolor=cGreen>; //Range 0-65535
+short Reserved_for_future_use <bgcolor=cGray>;
+
+struct{
+    char Engine_code[1] <bgcolor=cDkGreen>;
+    char VIN_mask[17] <bgcolor=cGreen>;
+
+    ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
+    ubyte Charisma_02_Switch_Gearbox <bgcolor=cGreen>;
+    
+    ubyte Charisma_03_Default_driving_profile <bgcolor=cDkGreen>;
+    ubyte Charisma_04_Reverse_driving_profile <bgcolor=cGreen>;
+
+    ubyte Charisma_05_Comfort_driving_profile <bgcolor=cDkGreen>;
+    ubyte Charisma_06_Normal_driving_profile <bgcolor=cGreen>;
+    ubyte Charisma_07_Sport_driving_profile <bgcolor=cDkGreen>;
+    ubyte Charisma_08_Offroad_driving_profile <bgcolor=cGreen>; 
+    ubyte Charisma_09_Eco_driving_profile <bgcolor=cDkGreen>;
+    ubyte Charisma_10_Race_driving_profile  <bgcolor=cGreen>;
+    ubyte Charisma_11_GTE_driving_profile  <bgcolor=cDkGreen>;
+
+    ubyte Reserved_for_future_use_1 <bgcolor=cGray>;  
+    ubyte Reserved_for_future_use_2 <bgcolor=cGray>;  
+    ubyte Reserved_for_future_use_3 <bgcolor=cGray>;  
+} Car[8];                                    
+
+FSeek(784);
+// block of 96 identical values. 
+struct{
+    short Boost_normal_ST;
+    short Boost_sport_ST;
+    short Boost_eco_ST;
+    short Hybrid_normal_ST;
+    short Hybrid_sport_ST;
+    short Hybrid_eco_ST;
+    short Efficiency_normal_ST;
+    short Efficiency_sport_ST;
+    // Efficiency_eco_ST is always off
+}   ST_Phase[12] <bgcolor=cDkYellow>;
+
+
+										  
+										  
+									  
+										 
+									
