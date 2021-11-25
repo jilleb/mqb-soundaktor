@@ -3,14 +3,15 @@
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
 //   Authors: Jille, Dark, Borg123
-//   Version: 0.3
+//   Version: 0.3.2
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
 // File Mask: 
 //  ID Bytes: 
 //   History: 0.1 - Initial version
 //            0.2 - Additional field descriptions taken from MxCar sheet   
-//            0.3.1 - 10 out of 12 tables mapped   
+//            0.3.1 - 10 out of 12 tables mapped
+//            0.3.2 - gain table key     
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -20,36 +21,37 @@
 // blue        = special
 // purple      = potential checksum
 
-short unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
-short unknown_2 <bgcolor=cDkYellow>;
-short unknown_3 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_5 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_6 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_7 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_8 <bgcolor=cSilver>; // doesn't change between versions. 
-short unknown_9 <bgcolor=cSilver>; // doesn't change between versions. 
-short unknown_10 <bgcolor=cSilver>; // doesn't change between versions. 
-short unknown_11 <bgcolor=cSilver>; // doesn't change between versions. 
-short unknown_12 <bgcolor=cSilver>; // doesn't change between versions. 
-short unknown_13 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_14 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_15 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_16 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_17 <bgcolor=cLtBlue>; // doesn't change between versions. 
-short unknown_18 <bgcolor=cDkYellow>; // identical to Amount_of_Defined_SignalFunctions_SF
-short unknown_19 <bgcolor=cYellow>; 
-short Damping_factor_for_something <bgcolor=cAqua>; // Range 0-65535 identical to Damping_factor_for_actuator_test
+ushort unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
+ubyte unknown_2 <bgcolor=cDkYellow>;
+ubyte Gain_table_flag <bgcolor=cYellow>; // looks like a flag / counter for additional Gain tables
+ushort unknown_3 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_5 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_6 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_7 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_8 <bgcolor=cSilver>; // doesn't change between versions. 
+ushort unknown_9 <bgcolor=cSilver>; // doesn't change between versions. 
+ushort unknown_10 <bgcolor=cSilver>; // doesn't change between versions. 
+ushort unknown_11 <bgcolor=cSilver>; // doesn't change between versions. 
+ushort unknown_12 <bgcolor=cSilver>; // doesn't change between versions. 
+ushort unknown_13 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_14 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_15 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_16 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_17 <bgcolor=cLtBlue>; // doesn't change between versions. 
+ushort unknown_18 <bgcolor=cDkYellow>; // identical to Amount_of_Defined_SignalFunctions_SF
+ushort unknown_19 <bgcolor=cYellow>; 
+ushort Damping_factor_for_something <bgcolor=cAqua>; // Range 0-65535 identical to Damping_factor_for_actuator_test
 
 FSeek(62);
-short source_filename_checksum <bgcolor=cGreen>;// CRC16-CCITT
+ushort source_filename_checksum <bgcolor=cBlack>;// CRC16-CCITT
 char source_filename[64] <bgcolor=cDkGreen>;
-short Amount_of_Defined_SoundProfiles_SP <bgcolor=cGreen>; 
-short Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
-short Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
-short Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
-short Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
-short Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
+ushort Amount_of_Defined_SoundProfiles_SP <bgcolor=cGreen>; 
+ushort Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
+ushort Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
+ushort Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
+ushort Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
+ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
 
 // 0: 512 Support points, max 32 Signals 
 // 1: 1024 Support points, max 16 Signals  
@@ -176,20 +178,22 @@ struct {
     // Efficiency_eco_ is always off
 }   MX_v_Gain[12] <bgcolor=cDkAqua>; 
 
-// block of 96 byte values 
-// this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
-// but 5F 0001, 0002, 8K firmwares dont have it
-struct {
-    ubyte Boost_normal_;
-    ubyte Boost_sport_;
-    ubyte Boost_eco_;
-    ubyte Hybrid_normal_;
-    ubyte Hybrid_sport_;
-    ubyte Hybrid_eco_;
-    ubyte Efficiency_normal_;
-    ubyte Efficiency_sport_;
-    // Efficiency_eco_ is always off
-}   Gain_4[12] <bgcolor=cDkYellow>; 
+if (Gain_table_flag > 0) {
+    // block of 96 byte values 
+    // this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
+    // but 5F 0001, 0002, 8K firmwares dont have it
+    struct {
+        ubyte Boost_normal_;
+        ubyte Boost_sport_;
+        ubyte Boost_eco_;
+        ubyte Hybrid_normal_;
+        ubyte Hybrid_sport_;
+        ubyte Hybrid_eco_;
+        ubyte Efficiency_normal_;
+        ubyte Efficiency_sport_;
+        // Efficiency_eco_ is always off
+    }   Gain_4[12] <bgcolor=cDkYellow>; 
+}
 
 // block of 16 short values. 
 struct {
@@ -202,7 +206,7 @@ struct {
     ushort Efficiency_normal_SUM;
     ushort Efficiency_sport_SUM;
     // Efficiency_eco_SUM is always off
-}   SUM_Gain_Clip[2] <bgcolor=cDkAqua>;
+}   SUM_Gain_Clip[2] <bgcolor=cAqua>;
 
 // [06 30] address pointer from 01DATA file
 ushort LIB_m_Gain_scale[32] <bgcolor=cGreen>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
@@ -227,31 +231,35 @@ struct {
 
 // [2A B0] address pointer from 01DATA file
 // 8100h block size! 
-ushort unknown_e[16512] <bgcolor=cDkAqua>; 
- 
-FSeek(10928);
-ushort Checksum_8W0907159 <bgcolor=cPurple>;
-
-FSeek(11022);
-ushort Checksum_4G0907160B <bgcolor=cPurple>;
-
+short unknown_e[16512] <bgcolor=cDkAqua>; 
 
 // Print a report to output 
 local int i = 0;
 local float x = 0;
 
 Printf (" %s \n", source_filename);
-Printf (" ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefaultProfile\tReverseProfile\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
+Printf (" ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
 
-
-while(i<Amount_of_Defined_SoundProfiles_SP)
-    {
-        Printf (" %i\t%s\t%s\t%i\t\t%i\t%i\t\t%i\t\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", i, Car[i].Engine_code, Car[i].VIN_mask, Car[i].Charisma_01_Switch_Relapse_Clamp15, Car[i].Charisma_02_Switch_Gearbox, Car[i].Charisma_03_Default_driving_profile, Car[i].Charisma_04_Reverse_driving_profile,Car[i].Charisma_05_Comfort_driving_profile,Car[i].Charisma_06_Normal_driving_profile,Car[i].Charisma_07_Sport_driving_profile,Car[i].Charisma_08_Offroad_driving_profile,Car[i].Charisma_09_Eco_driving_profile,Car[i].Charisma_10_Race_driving_profile,Car[i].Charisma_11_GTE_driving_profile,Car[i].Reserved_for_future_use_1,Car[i].Reserved_for_future_use_2,Car[i].Reserved_for_future_use_3);
+while (i<Amount_of_Defined_SoundProfiles_SP) {
+        Printf (" %i\t%s\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
+                i, 
+                Car[i].Engine_code, 
+                Car[i].VIN_mask, 
+                Car[i].Charisma_01_Switch_Relapse_Clamp15, 
+                Car[i].Charisma_02_Switch_Gearbox, 
+                Car[i].Charisma_03_Default_driving_profile, 
+                Car[i].Charisma_04_Reverse_driving_profile,
+                Car[i].Charisma_05_Comfort_driving_profile,
+                Car[i].Charisma_06_Normal_driving_profile,
+                Car[i].Charisma_07_Sport_driving_profile,
+                Car[i].Charisma_08_Offroad_driving_profile,
+                Car[i].Charisma_09_Eco_driving_profile,
+                Car[i].Charisma_10_Race_driving_profile,
+                Car[i].Charisma_11_GTE_driving_profile,
+                Car[i].Reserved_for_future_use_1,
+                Car[i].Reserved_for_future_use_2,
+                Car[i].Reserved_for_future_use_3
+            );
         i = i+1;
-    } 
-
-										  
-										  
-									  
-										 
+    } 								 
 									
