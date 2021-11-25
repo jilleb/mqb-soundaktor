@@ -10,15 +10,15 @@
 //  ID Bytes: 
 //   History: 0.1 - Initial version
 //            0.2 - Additional field descriptions taken from MxCar sheet   
-//            0.3 - 11 out of 12 tables mapped   
+//            0.3.1 - 10 out of 12 tables mapped   
 //------------------------------------------------
 // legend: 
-// yellow   = uncertain
-// red      = unknown
-// green    = confirmed
-// gray     = seemingly irrelevant
-// blue/aqua= special
-// purple   = potential checksum
+// yellow/aqua = uncertain
+// red         = unknown
+// green       = confirmed
+// gray        = seemingly irrelevant
+// blue        = special
+// purple      = potential checksum
 
 short unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
 short unknown_2 <bgcolor=cDkYellow>;
@@ -177,8 +177,8 @@ struct {
 }   MX_v_Gain[12] <bgcolor=cDkAqua>; 
 
 // block of 96 byte values 
-// this gain table appears only in newer firmwares: 5F 0003+, 8S, 8W
-// 5F 0001, 0002, 8K firmwares dont have it
+// this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
+// but 5F 0001, 0002, 8K firmwares dont have it
 struct {
     ubyte Boost_normal_;
     ubyte Boost_sport_;
@@ -205,30 +205,32 @@ struct {
 }   SUM_Gain_Clip[2] <bgcolor=cDkAqua>;
 
 // [06 30] address pointer from 01DATA file
-ushort LIB_m_Gain_scale[32] <bgcolor=cDkYellow>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
+ushort LIB_m_Gain_scale[32] <bgcolor=cGreen>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
 
 // [06 70] address pointer from 01DATA file 
-ushort LIB_n_Gain_Revs_scale[256] <bgcolor=cDkAqua>; // values in [500 - 8150] (rpm) range quanified by 16256
+ushort LIB_n_Gain_Revs_scale[256] <bgcolor=cDkGreen>; // values in [500 - 8150] (rpm) range quanified by 16256
 
 // [08 70] address pointer from 01DATA file
-ushort LIB_v_Gain_Speed_scale[32] <bgcolor=cDkYellow>; // values in [0 - 326.39] (km/h) range	
+ushort LIB_v_Gain_Speed_scale[32] <bgcolor=cGreen>; // values in [0 - 326.39] (km/h) range	
 
 // [08 B0] address pointer from 01DATA file
 struct {
     ushort unknown_d[32]; 
-} LIB_m_Gain_table[8] <bgcolor=cDkAqua>;
+} unknown_table2[8] <bgcolor=cDkAqua>;
 
 // [0A B0] address pointer from 01DATA file
+// could be LIB_n_Gain quantified by 16256
+// number of non-empty columns should be stored in MISC data, varies greatly from fw to fw
 struct { 
-    ushort unknown_e[256]; // quantified by 16256
-}   LIB_n_Gain_table[16] <bgcolor=cDkYellow> ; // number of non-empty columns should be stored in MISC data, varies greatly from fw to fw
+    ushort unknown_e[256]; 
+} unknown_table3[16] <bgcolor=cDkYellow> ; 
 
 // [2A B0] address pointer from 01DATA file
 // 8100h block size! 
 ushort unknown_e[16512] <bgcolor=cDkAqua>; 
  
 FSeek(10928);
-ushort Checksum_8W0907159 <bgcolor=cRed>;
+ushort Checksum_8W0907159 <bgcolor=cPurple>;
 
 FSeek(11022);
 ushort Checksum_4G0907160B <bgcolor=cPurple>;
