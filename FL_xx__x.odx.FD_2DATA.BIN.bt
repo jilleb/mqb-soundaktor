@@ -3,42 +3,44 @@
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
 //   Authors: Jille, Dark, Borg123
-//   Version: 0.2
+//   Version: 0.3
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
 // File Mask: 
 //  ID Bytes: 
 //   History: 0.1 - Initial version
 //            0.2 - Additional field descriptions taken from MxCar sheet   
+//            0.3.1 - 10 out of 12 tables mapped   
 //------------------------------------------------
 // legend: 
-// yellow   = uncertain
-// red      = unknown
-// green    = confirmed
-// gray     = seemingly irrelevant
-// blue/aqua= special
-// purple   = potential checksum
+// yellow/aqua = uncertain
+// red         = unknown
+// green       = confirmed
+// gray        = seemingly irrelevant
+// blue        = special
+// purple      = potential checksum
 
 short unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
 short unknown_2 <bgcolor=cDkYellow>;
-short unknown_3 <bgcolor=cYellow>;
-short unknown_4 <bgcolor=cDkYellow>; 
-short unknown_5 <bgcolor=cYellow>; 
-short unknown_6 <bgcolor=cDkYellow>; 
-short unknown_7 <bgcolor=cYellow>; 
+short unknown_3 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_5 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_6 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_7 <bgcolor=cLtBlue>; // doesn't change between versions. 
 short unknown_8 <bgcolor=cSilver>; // doesn't change between versions. 
 short unknown_9 <bgcolor=cSilver>; // doesn't change between versions. 
-short unknown_10 <bgcolor=cSilver>;// doesn't change between versions. 
-short unknown_11 <bgcolor=cSilver>;// doesn't change between versions. 
-short unknown_12 <bgcolor=cSilver>;// doesn't change between versions. 
-short unknown_13 <bgcolor=cLtBlue>;// doesn't change between versions. 
-short unknown_14 <bgcolor=cLtBlue>;// doesn't change between versions. 
-short unknown_15 <bgcolor=cLtBlue>;// doesn't change between versions. 
-short unknown_16 <bgcolor=cLtBlue>;// doesn't change between versions. 
-short unknown_17 <bgcolor=cLtBlue>;// doesn't change between versions. 
-short unknown_18 <bgcolor=cBlue>; // identical to unknown_25
+short unknown_10 <bgcolor=cSilver>; // doesn't change between versions. 
+short unknown_11 <bgcolor=cSilver>; // doesn't change between versions. 
+short unknown_12 <bgcolor=cSilver>; // doesn't change between versions. 
+short unknown_13 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_14 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_15 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_16 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_17 <bgcolor=cLtBlue>; // doesn't change between versions. 
+short unknown_18 <bgcolor=cDkYellow>; // identical to Amount_of_Defined_SignalFunctions_SF
 short unknown_19 <bgcolor=cYellow>; 
-short unknown_20 <bgcolor=cDkAqua>;  // identical to unknown_27
+short Damping_factor_for_something <bgcolor=cAqua>; // Range 0-65535 identical to Damping_factor_for_actuator_test
+
 FSeek(62);
 short source_filename_checksum <bgcolor=cGreen>;// CRC16-CCITT
 char source_filename[64] <bgcolor=cDkGreen>;
@@ -55,10 +57,10 @@ short Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
 // 3: 4096 Support points, max 4 Signals
 // 4: 8192 Support points, max 2 Signals
 
-short Damping_factor_foractuator_test <bgcolor=cGreen>; //Range 0-65535
+short Damping_factor_for_actuator_test <bgcolor=cGreen>; // Range 0-65535
 short Reserved_for_future_use <bgcolor=cGray>;
 
-struct{
+struct {
     char Engine_code[1] <bgcolor=cDkGreen>;
     char VIN_mask[17] <bgcolor=cGreen>;
 
@@ -79,26 +81,159 @@ struct{
     ubyte Reserved_for_future_use_1 <bgcolor=cGray>;  
     ubyte Reserved_for_future_use_2 <bgcolor=cGray>;  
     ubyte Reserved_for_future_use_3 <bgcolor=cGray>;  
-} Car[8];                                    
+} Car[Amount_of_Defined_SoundProfiles_SP];                                    
 
-FSeek(784);
-// block of 96 identical values. 
-struct{
-    short Boost_normal_ST;
-    short Boost_sport_ST;
-    short Boost_eco_ST;
-    short Hybrid_normal_ST;
-    short Hybrid_sport_ST;
-    short Hybrid_eco_ST;
-    short Efficiency_normal_ST;
-    short Efficiency_sport_ST;
+// block of 96 short values 
+struct {
+    ushort Boost_normal_ST;
+    ushort Boost_sport_ST;
+    ushort Boost_eco_ST;
+    ushort Hybrid_normal_ST;
+    ushort Hybrid_sport_ST;
+    ushort Hybrid_eco_ST;
+    ushort Efficiency_normal_ST;
+    ushort Efficiency_sport_ST;
+    // Efficiency_eco_ST is always off
+}   ST_Pitch_Shift[12] <bgcolor=cDkAqua>;
+
+// block of 96 short values 
+struct {
+    ushort Boost_normal_ST;
+    ushort Boost_sport_ST;
+    ushort Boost_eco_ST;
+    ushort Hybrid_normal_ST;
+    ushort Hybrid_sport_ST;
+    ushort Hybrid_eco_ST;
+    ushort Efficiency_normal_ST;
+    ushort Efficiency_sport_ST;
     // Efficiency_eco_ST is always off
 }   ST_Phase[12] <bgcolor=cDkYellow>;
 
-FSeek(2064);
-  ushort unknown_x[32];// this seems to be the same rising ramp always		
+// block of 96 short values 
+struct {
+    ushort Boost_normal_ST;
+    ushort Boost_sport_ST;
+    ushort Boost_eco_ST;
+    ushort Hybrid_normal_ST;
+    ushort Hybrid_sport_ST;
+    ushort Hybrid_eco_ST;
+    ushort Efficiency_normal_ST;
+    ushort Efficiency_sport_ST;
+    // Efficiency_eco_ST is always off
+}   ST_Gain[12] <bgcolor=cDkAqua>;
 
+// block of 96 short values 
+struct {
+    ushort Boost_normal_ST;
+    ushort Boost_sport_ST;
+    ushort Boost_eco_ST;
+    ushort Hybrid_normal_ST;
+    ushort Hybrid_sport_ST;
+    ushort Hybrid_eco_ST;
+    ushort Efficiency_normal_ST;
+    ushort Efficiency_sport_ST;
+    // Efficiency_eco_ST is always off
+}   ST_Delay[12] <bgcolor=cDkYellow>;
 
+// block of 96 byte values 
+// MX m-Gain probably, NEED TO VEFIRY
+struct {
+    ubyte Boost_normal_MXm;
+    ubyte Boost_sport_MXm;
+    ubyte Boost_eco_MXm;
+    ubyte Hybrid_normal_MXm;
+    ubyte Hybrid_sport_MXm;
+    ubyte Hybrid_eco_MXm;
+    ubyte Efficiency_normal_MXm;
+    ubyte Efficiency_sport_MXm;
+    // Efficiency_eco_ST is always off
+}   MX_m_Gain[12] <bgcolor=cDkAqua>; 
+
+// block of 96 byte values 
+struct {
+    ubyte Boost_normal_MXn;
+    ubyte Boost_sport_MXn;
+    ubyte Boost_eco_MXn;
+    ubyte Hybrid_normal_MXn;
+    ubyte Hybrid_sport_MXn;
+    ubyte Hybrid_eco_MXn;
+    ubyte Efficiency_normal_MXn;
+    ubyte Efficiency_sport_MXn;
+    // Efficiency_eco_MXn is always off
+}   MX_n_Gain[12] <bgcolor=cDkYellow>;
+
+// block of 96 byte values 
+// MX v-Gain probably, NEED TO VERIFY
+struct {
+    ubyte Boost_normal_MXv;
+    ubyte Boost_sport_MXv;
+    ubyte Boost_eco_MXv;
+    ubyte Hybrid_normal_MXv;
+    ubyte Hybrid_sport_MXv;
+    ubyte Hybrid_eco_MXv;
+    ubyte Efficiency_normal_MXv;
+    ubyte Efficiency_sport_MXv;
+    // Efficiency_eco_ is always off
+}   MX_v_Gain[12] <bgcolor=cDkAqua>; 
+
+// block of 96 byte values 
+// this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
+// but 5F 0001, 0002, 8K firmwares dont have it
+struct {
+    ubyte Boost_normal_;
+    ubyte Boost_sport_;
+    ubyte Boost_eco_;
+    ubyte Hybrid_normal_;
+    ubyte Hybrid_sport_;
+    ubyte Hybrid_eco_;
+    ubyte Efficiency_normal_;
+    ubyte Efficiency_sport_;
+    // Efficiency_eco_ is always off
+}   Gain_4[12] <bgcolor=cDkYellow>; 
+
+// block of 16 short values. 
+struct {
+    ushort Boost_normal_SUM;
+    ushort Boost_sport_SUM;
+    ushort Boost_eco_SUM;
+    ushort Hybrid_normal_SUM;
+    ushort Hybrid_sport_SUM;
+    ushort Hybrid_eco_SUM;
+    ushort Efficiency_normal_SUM;
+    ushort Efficiency_sport_SUM;
+    // Efficiency_eco_SUM is always off
+}   SUM_Gain_Clip[2] <bgcolor=cDkAqua>;
+
+// [06 30] address pointer from 01DATA file
+ushort LIB_m_Gain_scale[32] <bgcolor=cGreen>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
+
+// [06 70] address pointer from 01DATA file 
+ushort LIB_n_Gain_Revs_scale[256] <bgcolor=cDkGreen>; // values in [500 - 8150] (rpm) range quanified by 16256
+
+// [08 70] address pointer from 01DATA file
+ushort LIB_v_Gain_Speed_scale[32] <bgcolor=cGreen>; // values in [0 - 326.39] (km/h) range	
+
+// [08 B0] address pointer from 01DATA file
+struct {
+    ushort unknown_d[32]; 
+} unknown_table2[8] <bgcolor=cDkAqua>;
+
+// [0A B0] address pointer from 01DATA file
+// could be LIB_n_Gain quantified by 16256
+// number of non-empty columns should be stored in MISC data, varies greatly from fw to fw
+struct { 
+    ushort unknown_e[256]; 
+} unknown_table3[16] <bgcolor=cDkYellow> ; 
+
+// [2A B0] address pointer from 01DATA file
+// 8100h block size! 
+ushort unknown_e[16512] <bgcolor=cDkAqua>; 
+ 
+FSeek(10928);
+ushort Checksum_8W0907159 <bgcolor=cPurple>;
+
+FSeek(11022);
+ushort Checksum_4G0907160B <bgcolor=cPurple>;
 
 
 // Print a report to output 
