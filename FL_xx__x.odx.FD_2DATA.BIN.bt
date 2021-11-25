@@ -59,7 +59,7 @@ short Damping_factor_foractuator_test <bgcolor=cGreen>; //Range 0-65535
 short Reserved_for_future_use <bgcolor=cGray>;
 
 struct{
-    char Engine_code[1] <bgcolor=cDkGreen>;
+    byte Engine_code[1] <bgcolor=cDkGreen>;
     char VIN_mask[17] <bgcolor=cGreen>;
 
     ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
