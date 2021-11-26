@@ -62,6 +62,7 @@ short Reserved_for_future_use <bgcolor=cGray>;
 
 struct{
     byte Engine_code[1] <bgcolor=cDkGreen>;
+    char VIN_mask[17];
     ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
     ubyte Charisma_02_Switch_Gearbox <bgcolor=cGreen>;
     
