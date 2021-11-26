@@ -49,7 +49,7 @@ short Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
 short Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
 short Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
 short Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
-short Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
+short Selected_resolution_for_signal_table_ST <bgcolor=cDkGreen>;
 
 // 0: 512 Support points, max 32 Signals 
 // 1: 1024 Support points, max 16 Signals  
@@ -62,7 +62,7 @@ short Reserved_for_future_use <bgcolor=cGray>;
 
 struct{
     byte Engine_code[1] <bgcolor=cDkGreen>;
-    char VIN_mask[17];
+    char VIN_mask[17] <bgcolor=cLtGreen>;
     ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
     ubyte Charisma_02_Switch_Gearbox <bgcolor=cGreen>;
     
