@@ -12,7 +12,7 @@
 //            0.2 - Additional field descriptions taken from MxCar sheet   
 //            0.3.1 - 10 out of 12 tables mapped
 //            0.3.2 - Gain table key     
-//            0.4 - Parsed and visualized all the tables found at this moment
+//            0.4 - Parsed and visualized all the tables found at this moment 
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -143,7 +143,7 @@ if (Gain_table_flag > 0) {
 }
 
 // block of 16 short values. 
-sheet82 SUM_Gain_Clip <bgcolor=cAqua>;
+sheet82 SUM_Gain_Clip <bgcolor=cDkGreen>;
 
 // [06 30] address pointer from 01DATA file
 ushort LIB_m_Gain_scale[32] <bgcolor=cGreen>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
@@ -168,13 +168,11 @@ struct {
 
 // [2A B0] address pointer from 01DATA file
 // 8100h block size! 
-short unknown_e[16512] <bgcolor=cDkAqua>; 
+struct {
+    ushort value[32]; 
+} LIB_v_Gain_data[4] <bgcolor=cDkGreen>;
 
-// FSeek(10928);
-// ushort Checksum_8W0907159 <bgcolor=cPurple>;
-
-// FSeek(11022);
-// ushort Checksum_4G0907160B <bgcolor=cPurple>;
+short unknown_data[16384] <bgcolor=cDkAqua>; 
 
 // Print a report to output 
 
@@ -306,15 +304,13 @@ void PrintSheet2( char name[], struct sheet82 sheet) {
     Printf("\n");
 } 
 
-
-
-// SHORT spreadsheets
+// SHORT spreadsheets 8x12
 PrintSheet12_Q16("Spreadsheet 1: ST_Gain ???", ST_Gain);
 PrintSheet12("Spreadsheet 2: ST_Phase ???", ST_Phase);
 PrintSheet12_Q1("Spreadsheet 3: ST_Pitch_Shift", ST_Pitch_Shift);
 PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay);
 
-// BYTE spreadsheets
+// BYTE spreadsheets 8x12
 PrintSheet12b("Spreadsheet 5: MX_m_Gain ???", MX_m_Gain);
 PrintSheet12b("Spreadsheet 6: MX_n_Gain ???", MX_n_Gain);
 PrintSheet12b("Spreadsheet 7: MX_v_Gain ???", MX_v_Gain);
@@ -322,28 +318,38 @@ if (Gain_table_flag > 0) {
     PrintSheet12b("Spreadsheet 8: Gain something ???", Gain_4);
 }
 
+// USHORT spreadsheet 8x2
 PrintSheet2("Spreadsheet 9: SUM_Gain_Clip", SUM_Gain_Clip);
 
 
-Printf("\nLIB_m_Gain\nHEADER\tDATA\n");
+// Increase / Decrease revs scale ???
+// could be useful for popcorn effect
+Printf("\nSpreadsheet 10: LIB_m_Gain\nHEADER\tDATA\n");
 for( i = 0; i < 32; i++ ) {
     Printf("%.2f", (float) LIB_m_Gain_scale[i] / 32768 - 1);
-    for (j = 0; j < 8; j++ ) {
-        Printf("\t%.3g", (float) LIB_m_Gain_data[j].value[i] / 65536);
+    for( j = 0; j < 8; j++ ) {
+        Printf("\t%.4f", (float) LIB_m_Gain_data[j].value[i] / 65536);
     }
     Printf("\n");
 }
 
-Printf("\nLIB_n_Gain_Revs\nHEADER\tDATA\n");
+Printf("\nSpreadsheet 11: LIB_n_Gain_Revs\nHEADER\tDATA\n");
 for( i = 0; i < 256; i++ ) {
     Printf("%i", (float) LIB_n_Gain_Revs_scale[i] / 65536 * 16526);
-    for (j = 0; j < 15; j++ ) {
-        Printf("\t%.3g", (float) LIB_n_Gain_data[j].value[i] / 65536);
+    for( j = 0; j < 16; j++ ) {
+        Printf("\t%.4f", (float) LIB_n_Gain_data[j].value[i] / 65536);
     }
     Printf("\n");
 }
 
-Printf("\nHEADER 3: LIB_v_Gain_Speed_scale\n");
+Printf("\nSpreadsheet 12: LIB_v_Gain_Speed\nHEADER\tDATA\n");
 for( i = 0; i < 32; i++ ) {
-    Printf("%.2f\n", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
+    // real scale for this header column is the percentage [0 - 100%] from 326.39 value
+    // multipliying it to 3.2639 shows absolute speed
+    // (VW e-UP! is limited to 150kmh)
+    Printf("%.2f", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
+    for( j = 0; j < 4; j++ ) {
+        Printf("\t%.4f", (float) LIB_v_Gain_data[j].value[i] / 65536);
+    }
+    Printf("\n");
 }
