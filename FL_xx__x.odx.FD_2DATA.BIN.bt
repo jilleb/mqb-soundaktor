@@ -25,23 +25,28 @@
 ushort unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
 ubyte unknown_2 <bgcolor=cDkYellow>;
 ubyte Gain_table_flag <bgcolor=cYellow>; // looks like a flag / counter for additional Gain tables
-ushort unknown_3 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_5 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_6 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_7 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_8 <bgcolor=cSilver>; // doesn't change between versions. 
-ushort unknown_9 <bgcolor=cSilver>; // doesn't change between versions. 
-ushort unknown_10 <bgcolor=cSilver>; // doesn't change between versions. 
-ushort unknown_11 <bgcolor=cSilver>; // doesn't change between versions. 
-ushort unknown_12 <bgcolor=cSilver>; // doesn't change between versions. 
-ushort unknown_13 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_14 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_15 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_16 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_17 <bgcolor=cLtBlue>; // doesn't change between versions. 
-ushort unknown_18 <bgcolor=cDkYellow>; // identical to Amount_of_Defined_SignalFunctions_SF
-ushort unknown_19 <bgcolor=cYellow>; 
+ushort unknown_3 <bgcolor=cLtBlue>; // doesn't change between versions. 8, possibly the amount of cars?
+ushort unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 12, possibly the size of the ST gain/phase/pitchshift/delay tables
+ushort unknown_5 <bgcolor=cLtBlue>; // doesn't change between versions. 16, possibly the size of LIB_n_Gain_data
+ushort unknown_6 <bgcolor=cLtBlue>; // doesn't change between versions. 8, possibly the size of LIB_m_Gain_data
+ushort unknown_7 <bgcolor=cLtBlue>; // doesn't change between versions. 4, possibly the size of LIB_v_Gain_data
+ushort unknown_8 <bgcolor=cSilver>; // doesn't change between versions. 256, possibly the size of LIB_n_Gain_Revs_scale
+ushort unknown_9 <bgcolor=cSilver>; // doesn't change between versions. 32, possibly the size of LIB_v_Gain_Speed_scale or LIB_m_Gain_scale
+ushort unknown_10 <bgcolor=cSilver>; // doesn't change between versions. 32, possibly the size of LIB_v_Gain_Speed_scale or LIB_m_Gain_scale 
+ushort unknown_11 <bgcolor=cSilver>; // doesn't change between versions. 512, which is the amount of bytes of LIB_n_Gain_Revs_scale and LIB_m_Gain_data
+ushort unknown_12 <bgcolor=cSilver>; // doesn't change between versions. 8192
+ushort unknown_13 <bgcolor=cLtBlue>; // doesn't change between versions. 8, repeat of unknown_3 ?
+ushort unknown_14 <bgcolor=cLtBlue>; // doesn't change between versions. 12, repeat of unknown_4 ?
+ushort unknown_15 <bgcolor=cLtBlue>; // doesn't change between versions. 16, repeat of unknown_5 ?
+ushort unknown_16 <bgcolor=cLtBlue>; // doesn't change between versions. 8, repeat of unknown_6 ?
+ushort unknown_17 <bgcolor=cLtBlue>; // doesn't change between versions. 4, repeat of unknown_7 ?
+
+// the following 2 values are linked to Selected_resoltion_for_signal_table. 
+// Depending on the value there, the values here are different.
+// see Selected_resolution_for_signal_table for more information
+ushort Max_Amount_of_signals_in_Signal_table_resolution <bgcolor=cDkGreen>; 
+ushort Amount_of_support_points_in_Signal_table_resolution <bgcolor=cGreen>;
+
 ushort Damping_factor_for_something <bgcolor=cAqua>; // Range 0-65535 identical to Damping_factor_for_actuator_test
 
 FSeek(62);
@@ -52,8 +57,8 @@ ushort Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
 ushort Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
-ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
 
+ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
 // 0: 512 Support points, max 32 Signals 
 // 1: 1024 Support points, max 16 Signals  
 // 2: 2048 Support points, max 8 Signals
