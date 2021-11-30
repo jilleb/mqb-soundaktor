@@ -47,7 +47,8 @@ ushort unknown_17 <bgcolor=cLtBlue>; // doesn't change between versions. 4, repe
 ushort Max_Amount_of_signals_in_Signal_table_resolution <bgcolor=cDkGreen>; 
 ushort Amount_of_support_points_in_Signal_table_resolution <bgcolor=cGreen>;
 
-ushort Damping_factor_for_something <bgcolor=cAqua>; // Range 0-65535 identical to Damping_factor_for_actuator_test
+ushort Damping_factor_for_something <bgcolor=cYellow>; // Range 0-65535 identical to Damping_factor_for_actuator_test
+// could also be the Offset where the filename starts.
 
 FSeek(62);
 ushort source_filename_checksum <bgcolor=cBlack>;// CRC16-CCITT
@@ -57,7 +58,6 @@ ushort Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
 ushort Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
-
 ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
 // 0: 512 Support points, max 32 Signals 
 // 1: 1024 Support points, max 16 Signals  
