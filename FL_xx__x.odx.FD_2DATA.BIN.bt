@@ -22,10 +22,11 @@
 // blue        = special
 // purple      = potential checksum
 
+LittleEndian();
 ushort unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
 ubyte unknown_2 <bgcolor=cDkYellow>;
 ubyte Gain_table_flag <bgcolor=cYellow>; // looks like a flag / counter for additional Gain tables
-ushort unknown_3 <bgcolor=cLtBlue>; // doesn't change between versions. 8, possibly the amount of cars?
+ushort Amount_of_cars <bgcolor=cDkYellow>; // doesn't change between versions. 8, possibly the amount of cars?
 ushort unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 12, possibly the size of the ST gain/phase/pitchshift/delay tables
 ushort unknown_5 <bgcolor=cLtBlue>; // doesn't change between versions. 16, possibly the size of LIB_n_Gain_data
 ushort unknown_6 <bgcolor=cLtBlue>; // doesn't change between versions. 8, possibly the size of LIB_m_Gain_data
@@ -89,7 +90,7 @@ struct {
     ubyte Reserved_for_future_use_1 <bgcolor=cGray>;  
     ubyte Reserved_for_future_use_2 <bgcolor=cGray>;  
     ubyte Reserved_for_future_use_3 <bgcolor=cGray>;  
-} Car[Amount_of_Defined_SoundProfiles_SP];                                    
+} Car[Amount_of_cars];                                    
 
 // Engine codes
 
@@ -103,6 +104,7 @@ struct {
 // 42 - 0100 0010 - ???
 // 45 - 0100 0101 - 2.0l CUPA diesel ?
 // 48 - 0100 1000 - ??? A4 B9 diesel 
+// 5A - 0101 1010 - ???
 // 3F - 0011 1111 - ANY 
 
 typedef struct {
@@ -188,7 +190,7 @@ local float x = 0;
 Printf("%s \n", source_filename);
 Printf("ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
 
-for( i = 0; i < Amount_of_Defined_SoundProfiles_SP; i++ ) {
+for( i = 0; i < Amount_of_cars; i++ ) {
     Printf("%i\t%02X\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
         i, 
         Car[i].Engine_code, 
