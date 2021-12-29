@@ -280,7 +280,7 @@ void PrintSheet2( char name[], struct sheet82 sheet) {
 
 // SHORT spreadsheets 8x12
 //PrintSheet12( string name, sheet sheet, int quantizationfactor, string format)"
-PrintSheet12("Spreadsheet 1: ST_Gain ???", ST_Gain, 512, "%.3g\t" ); // not sure about the factor yet.
+PrintSheet12_Q16("Spreadsheet 1: ST_Gain", ST_Gain );
 PrintSheet12("Spreadsheet 2: ST_Phase ???", ST_Phase, 1, "%.3g\t" );
 PrintSheet12("Spreadsheet 3: ST_Pitch_Shift", ST_Pitch_Shift, 65536, "%.3g\t");
 PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
