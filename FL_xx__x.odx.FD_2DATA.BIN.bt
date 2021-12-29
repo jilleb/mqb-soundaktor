@@ -108,12 +108,12 @@ struct {
 // 3F - 0011 1111 - ANY 
 
 typedef struct {
-    ushort value[8];
-} sheet812[12];
+    ushort value[12];
+} sheet812[8];
 
 typedef struct {
-    ubyte value[8];
-} sheet812b[12];
+    ubyte value[12];
+} sheet812b[8];
 
 typedef struct {
     ushort value[8];
@@ -146,7 +146,7 @@ if (Gain_table_flag > 0) {
     // block of 96 byte values 
     // this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
     // but 5F 0001, 0002, 8K firmwares dont have it
-    sheet812b Gain_4 <bgcolor=cDkYellow>; 
+    sheet812b MX_Sig <bgcolor=cDkYellow>; 
 }
 
 // block of 16 short values. 
@@ -179,33 +179,37 @@ struct {
     ushort value[32]; 
 } LIB_v_Gain_data[4] <bgcolor=cDkGreen>;
 
-short unknown_data[16384] <bgcolor=cDkAqua>; 
+struct{
+    short value[1024] ;
+} LIB_Sig[16] <bgcolor=cDkAqua>; 
 
 // Print a report to output 
 
 local int i = 0;
 local int j = 0;
 local float x = 0;
+local int factor = 0;
+local string format = "";
 
 Printf("%s \n", source_filename);
 Printf("ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
 
 for( i = 0; i < Amount_of_cars; i++ ) {
-    Printf("%i\t%02X\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
+    Printf("%i\t%02X\t%s\t%i\t\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
         i, 
         Car[i].Engine_code, 
         Car[i].VIN_mask, 
         Car[i].Charisma_01_Switch_Relapse_Clamp15, 
         Car[i].Charisma_02_Switch_Gearbox, 
-        Car[i].Charisma_03_Default_driving_profile, 
-        Car[i].Charisma_04_Reverse_driving_profile,
-        Car[i].Charisma_05_Comfort_driving_profile,
-        Car[i].Charisma_06_Normal_driving_profile,
-        Car[i].Charisma_07_Sport_driving_profile,
-        Car[i].Charisma_08_Offroad_driving_profile,
-        Car[i].Charisma_09_Eco_driving_profile,
-        Car[i].Charisma_10_Race_driving_profile,
-        Car[i].Charisma_11_GTE_driving_profile,
+        Car[i].Charisma_03_Default_driving_profile+1,//these all need +1 for some reason, unless it's 255 
+        Car[i].Charisma_04_Reverse_driving_profile+1,
+        Car[i].Charisma_05_Comfort_driving_profile+1,
+        Car[i].Charisma_06_Normal_driving_profile+1,
+        Car[i].Charisma_07_Sport_driving_profile+1,
+        Car[i].Charisma_08_Offroad_driving_profile+1,
+        Car[i].Charisma_09_Eco_driving_profile+1,
+        Car[i].Charisma_10_Race_driving_profile+1,
+        Car[i].Charisma_11_GTE_driving_profile+1,
         Car[i].Reserved_for_future_use_1,
         Car[i].Reserved_for_future_use_2,
         Car[i].Reserved_for_future_use_3
@@ -219,40 +223,24 @@ void PrintHeader( char name[] ) {
 }
 
 
-void PrintSheet12( char name[], struct sheet812 sheet) {
-    PrintHeader( name + " USHORT" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
-            Printf("%i\t", sheet[i].value[j]);
-        }
-        Printf("\n");
-    };			 
-} 
 
-void PrintSheet12_Q1( char name[], struct sheet812 sheet) {
-    PrintHeader( name + " USHORT" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
-            Printf("%.3g\t", (float) sheet[i].value[j] / 0xFFFF );
-        }
-        Printf("\n");
-    };			 
-} 
 
-void PrintSheet12_Q4( char name[], struct sheet812 sheet) {
-    PrintHeader( name + " USHORT" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
-            Printf("%.3g\t", (float) sheet[i].value[j] / 4);
+void PrintSheet12( char name[], struct sheet812 sheet, int factor, string format) {
+    
+    PrintHeader( name );
+        for ( j = 0; j < 12; j++ ) {
+            for( i = 0; i < 8; i++ ) {
+            Printf(format, (float) sheet[i].value[j] / factor);
         }
         Printf("\n");
-    };			 
-} 
+        };
+}
+
 
 void PrintSheet12_Q16( char name[], struct sheet812 sheet) {
     PrintHeader( name + " USHORT" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
+    for( j = 0; j < 12; j++ ) {
+        for ( i = 0; i < 8; i++ ) {
             // there is definitelly a rounding issues exists
             // trying to compensate them
             x = (float) sheet[i].value[j] / 16;
@@ -266,31 +254,12 @@ void PrintSheet12_Q16( char name[], struct sheet812 sheet) {
     };			 
 } 
 
-void PrintSheet12_Q45( char name[], struct sheet812 sheet) {
-    PrintHeader( name + " USHORT" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
-            Printf("%.3g\t", (float) sheet[i].value[j] / 45);
-        }
-        Printf("\n");
-    };			 
-} 
-
-void PrintSheet12_Q2Pi( char name[], struct sheet812 sheet) {
-    PrintHeader( name + " USHORT" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
-             Printf("%.3g\t", (float) sheet[i].value[j] / 0xFFFF * 2 * 3.14159265359);
-        }
-        Printf("\n");
-    };			 
-} 
-
 
 void PrintSheet12b( char name[], struct sheet812b sheet) {
     PrintHeader( name + " UBYTE" );
-    for( i = 0; i < 12; i++ ) {
-        for ( j = 0; j < 8; j++ ) {
+
+        for ( j = 0; j < 12; j++ ) {
+            for( i = 0; i < 8; i++ ) {
             Printf("%i\t", sheet[i].value[j] + 1); // not sure do we need this +1
         }
         Printf("\n");
@@ -300,29 +269,32 @@ void PrintSheet12b( char name[], struct sheet812b sheet) {
 void PrintSheet2( char name[], struct sheet82 sheet) {
     PrintHeader( name + " USHORT" );
     for ( j = 0; j < 8; j++ ) {
-        Printf("%.3g\t", (float) sheet[0].value[j] / 65536); // 0 < X < 1 // Q:65536
+        Printf("%.3g\t", (float) sheet[0].value[j]/65536 * 2); // 0 < X < 1 // Q:65536
     }
     Printf("\n");
-    // TODO: need to doublecheck this row of values, 
-    // data parsed doesnt look like our example
     for ( j = 0; j < 8; j++ ) {
-        Printf("%.3g\t", (float) sheet[1].value[j] / 8192); // 0 < X < 8 // Q:65536
+        Printf("%.3g\t", (float) sheet[1].value[j]/65536 * 512); // 0 < X < 8 // Q:65536
     }
     Printf("\n");
 } 
 
 // SHORT spreadsheets 8x12
-PrintSheet12_Q16("Spreadsheet 1: ST_Gain ???", ST_Gain);
-PrintSheet12("Spreadsheet 2: ST_Phase ???", ST_Phase);
-PrintSheet12_Q1("Spreadsheet 3: ST_Pitch_Shift", ST_Pitch_Shift);
-PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay);
+//PrintSheet12( string name, sheet sheet, int quantizationfactor, string format)"
+PrintSheet12("Spreadsheet 1: ST_Gain ???", ST_Gain, 512, "%.3g\t" ); // not sure about the factor yet.
+PrintSheet12("Spreadsheet 2: ST_Phase ???", ST_Phase, 1, "%.3g\t" );
+PrintSheet12("Spreadsheet 3: ST_Pitch_Shift", ST_Pitch_Shift, 65536, "%.3g\t");
+PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
 
-// BYTE spreadsheets 8x12
-PrintSheet12b("Spreadsheet 5: MX_m_Gain ???", MX_m_Gain);
-PrintSheet12b("Spreadsheet 6: MX_n_Gain ???", MX_n_Gain);
-PrintSheet12b("Spreadsheet 7: MX_v_Gain ???", MX_v_Gain);
+
+
+
+
+// BYTE spreadsheets 12x8
+PrintSheet12b("Spreadsheet 5: MX_m_Gain", MX_m_Gain);
+PrintSheet12b("Spreadsheet 6: MX_n_Gain", MX_n_Gain);
+PrintSheet12b("Spreadsheet 7: MX_v_Gain", MX_v_Gain);
 if (Gain_table_flag > 0) {
-    PrintSheet12b("Spreadsheet 8: Gain something ???", Gain_4);
+    PrintSheet12b("Spreadsheet 8: MX Sig", MX_Sig);
 }
 
 // USHORT spreadsheet 8x2
@@ -357,6 +329,15 @@ for( i = 0; i < 32; i++ ) {
     Printf("%.2f", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
     for( j = 0; j < 4; j++ ) {
         Printf("\t%.4f", (float) LIB_v_Gain_data[j].value[i] / 65536);
+    }
+    Printf("\n");
+}
+
+
+Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
+for( i = 0; i < 1024; i++ ) {
+    for( j = 0; j < 16; j++ ) {
+        Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
     }
     Printf("\n");
 }
