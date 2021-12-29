@@ -3,7 +3,7 @@
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
 //   Authors: Jille, Dark, Borg123
-//   Version: 0.4
+//   Version: 0.6
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
 // File Mask: 
@@ -13,6 +13,8 @@
 //            0.3.1 - 10 out of 12 tables mapped
 //            0.3.2 - Gain table key     
 //            0.4 - Parsed and visualized all the tables found at this moment 
+//            0.5 - Transposed some tables to be viewed in the right way
+//            0.6 - Added Lib_Sig (whatever it may be.. noise signature?)
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -96,6 +98,7 @@ struct {
 
 // 07 - 0000 0111 - Kodiaq diesel Dxxx
 // 0C - 0000 1100 - 2.0l CUNA diesel ?
+// 13 - 0001 0011 - 1.4TSI GTE
 // 14 - 0001 0100 - old-school A4 diesels 2.0l / 2.7l / 3.0l
 // 29 - 0010 1001 - ??? A4 B9 diesel 
 // 2A - 0010 1010 - ???
@@ -132,14 +135,12 @@ sheet812 ST_Pitch_Shift <bgcolor=cDkAqua>;
 sheet812 ST_Delay <bgcolor=cDkYellow>;
 
 // block of 96 byte values 
-// MX m-Gain probably, NEED TO VEFIRY
 sheet812b MX_m_Gain <bgcolor=cDkAqua>; 
 
 // block of 96 byte values 
 sheet812b MX_n_Gain <bgcolor=cDkYellow>;
 
 // block of 96 byte values 
-// MX v-Gain probably, NEED TO VERIFY
 sheet812b MX_v_Gain <bgcolor=cDkAqua>; 
 
 if (Gain_table_flag > 0) {
@@ -289,7 +290,7 @@ PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
 
 
 
-// BYTE spreadsheets 12x8
+// BYTE spreadsheets 8x12
 PrintSheet12b("Spreadsheet 5: MX_m_Gain", MX_m_Gain);
 PrintSheet12b("Spreadsheet 6: MX_n_Gain", MX_n_Gain);
 PrintSheet12b("Spreadsheet 7: MX_v_Gain", MX_v_Gain);
