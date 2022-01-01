@@ -15,6 +15,7 @@
 //            0.4 - Parsed and visualized all the tables found at this moment 
 //            0.5 - Transposed some tables to be viewed in the right way
 //            0.6 - Added Lib_Sig (whatever it may be.. noise signature?)
+//            0.7 - template code cleanup, started GEN2.5 parsing
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -24,9 +25,72 @@
 // blue        = special
 // purple      = potential checksum
 
+// LOCAL VARIABLES
+
+local int i = 0;
+local int j = 0;
+local float x = 0;
+local int factor = 0;
+local string format = "";
+
+// FUNCTIONS
+
+void PrintHeader( char name[] ) {
+    Printf("\n%s\n", name);
+    Printf("BOOST\t\t\tHYBRID\t\t\tEFFICIENCY\n");
+    Printf("Normal\tSport\tEco\tNormal\tSport\tEco\tNormal\tSport\n");
+}
+
+void PrintSheet12( char name[], struct sheet12x8 sheet, int factor, string format) {
+    PrintHeader( name );
+    for ( j = 0; j < 12; j++ ) {
+        for( i = 0; i < 8; i++ ) {
+            Printf(format, (float) sheet[i].value[j] / factor);
+        }
+        Printf("\n");
+    };
+}
+
+void PrintSheet12_Q16( char name[], struct sheet12x8 sheet) {
+    PrintHeader( name );
+    for( j = 0; j < 12; j++ ) {
+        for ( i = 0; i < 8; i++ ) {
+            // there is definitelly a rounding issue exists
+            // trying to compensate it with 1.006 multiplier
+            x = (float) sheet[i].value[j] * 1.006 / 16;
+            Printf("%.3g°\t", x);
+        }
+        Printf("\n");
+    };			 
+} 
+
+void PrintSheet12b( char name[], struct sheet12x8bytes sheet) {
+    PrintHeader( name + " UBYTE" );
+    for ( j = 0; j < 12; j++ ) {
+        for( i = 0; i < 8; i++ ) {
+            Printf("%i\t", sheet[i].value[j] + 1); // not sure do we need this +1
+        }
+        Printf("\n");
+    };			 
+} 
+
+void PrintSheet2( char name[], struct sheet8x2 sheet) {
+    PrintHeader( name + " USHORT" );
+    for ( j = 0; j < 8; j++ ) {
+        Printf("%.3g\t", (float) sheet[0].value[j]/65536 * 2); // 0 < X < 1 // Q:65536
+    }
+    Printf("\n");
+    for ( j = 0; j < 8; j++ ) {
+        Printf("%.3g\t", (float) sheet[1].value[j]/65536 * 512); // 0 < X < 8 // Q:65536
+    }
+    Printf("\n");
+} 
+
+// START PARSING
+
 LittleEndian();
 ushort unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
-ubyte unknown_2 <bgcolor=cDkYellow>;
+ubyte Gen2_5_flag <bgcolor=cDkYellow>; // looks like a flag for GEN2.5 version
 ubyte Gain_table_flag <bgcolor=cYellow>; // looks like a flag / counter for additional Gain tables
 ushort Amount_of_cars <bgcolor=cDkYellow>; // doesn't change between versions. 8, possibly the amount of cars?
 ushort unknown_4 <bgcolor=cLtBlue>; // doesn't change between versions. 12, possibly the size of the ST gain/phase/pitchshift/delay tables
@@ -71,268 +135,276 @@ ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
 short Damping_factor_for_actuator_test <bgcolor=cGreen>; // Range 0-65535
 short Reserved_for_future_use <bgcolor=cGray>;
 
-struct {
-    ubyte Engine_code <bgcolor=cDkGreen>;
-    char VIN_mask[17] <bgcolor=cGreen>;
-
-    ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
-    ubyte Charisma_02_Switch_Gearbox <bgcolor=cGreen>;
-    
-    ubyte Charisma_03_Default_driving_profile <bgcolor=cDkGreen>;
-    ubyte Charisma_04_Reverse_driving_profile <bgcolor=cGreen>;
-
-    ubyte Charisma_05_Comfort_driving_profile <bgcolor=cDkGreen>;
-    ubyte Charisma_06_Normal_driving_profile <bgcolor=cGreen>;
-    ubyte Charisma_07_Sport_driving_profile <bgcolor=cDkGreen>;
-    ubyte Charisma_08_Offroad_driving_profile <bgcolor=cGreen>; 
-    ubyte Charisma_09_Eco_driving_profile <bgcolor=cDkGreen>;
-    ubyte Charisma_10_Race_driving_profile  <bgcolor=cGreen>;
-    ubyte Charisma_11_GTE_driving_profile  <bgcolor=cDkGreen>;
-
-    ubyte Reserved_for_future_use_1 <bgcolor=cGray>;  
-    ubyte Reserved_for_future_use_2 <bgcolor=cGray>;  
-    ubyte Reserved_for_future_use_3 <bgcolor=cGray>;  
-} Car[Amount_of_cars];                                    
-
-// Engine codes
-
-// 07 - 0000 0111 - Kodiaq diesel Dxxx
-// 0C - 0000 1100 - 2.0l CUNA diesel ?
-// 13 - 0001 0011 - 1.4TSI GTE
-// 14 - 0001 0100 - old-school A4 diesels 2.0l / 2.7l / 3.0l
-// 29 - 0010 1001 - ??? A4 B9 diesel 
-// 2A - 0010 1010 - ???
-// 2B - 0010 1011 - 2.0l CJS / CJX
-// 2D - 0010 1101 - A6 diesel ? 
-// 42 - 0100 0010 - ???
-// 45 - 0100 0101 - 2.0l CUPA diesel ?
-// 48 - 0100 1000 - ??? A4 B9 diesel 
-// 5A - 0101 1010 - ???
-// 3F - 0011 1111 - ANY 
-
-typedef struct {
-    ushort value[12];
-} sheet12x8[8];
-
-typedef struct {
-    ubyte value[12];
-} sheet12x8bytes[8];
-
-typedef struct {
-    ushort value[8];
-} sheet8x2[2];
-
-// block of 96 short values 
-sheet12x8 ST_Gain <bgcolor=cDkAqua>;
-
-// block of 96 short values 
-sheet12x8 ST_Phase <bgcolor=cDkYellow>;
-
-// block of 96 short values 
-sheet12x8 ST_Pitch_Shift <bgcolor=cDkAqua>;
-
-// block of 96 short values 
-sheet12x8 ST_Delay <bgcolor=cDkYellow>;
-
-// block of 96 byte values 
-sheet12x8bytes MX_m_Gain <bgcolor=cDkAqua>; 
-
-// block of 96 byte values 
-sheet12x8bytes MX_n_Gain <bgcolor=cDkYellow>;
-
-// block of 96 byte values 
-sheet12x8bytes MX_v_Gain <bgcolor=cDkAqua>; 
-
-if (Gain_table_flag > 0) {
-    // block of 96 byte values 
-    // this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
-    // but 5F 0001, 0002, 8K firmwares dont have it
-    sheet12x8bytes MX_Sig <bgcolor=cDkYellow>; 
-}
-
-// block of 16 short values. 
-sheet8x2 SUM_Gain_Clip <bgcolor=cDkGreen>;
-
-// [06 30] address pointer from 01DATA file
-ushort LIB_m_Gain_scale[32] <bgcolor=cGreen>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
-
-// [06 70] address pointer from 01DATA file 
-ushort LIB_n_Gain_Revs_scale[256] <bgcolor=cDkGreen>; // values in [500 - 8150] (rpm) range quanified by 16256
-
-// [08 70] address pointer from 01DATA file
-ushort LIB_v_Gain_Speed_scale[32] <bgcolor=cGreen>; // values in [0 - 326.39] (km/h) range	
-
-// [08 B0] address pointer from 01DATA file
-struct {
-    ushort value[32]; 
-} LIB_m_Gain_data[8] <bgcolor=cDkGreen>;
-
-// [0A B0] address pointer from 01DATA file
-// could be LIB_n_Gain quantified by 16256
-// number of non-empty columns should be stored in MISC data, varies greatly from fw to fw
-struct { 
-    ushort value[256]; 
-} LIB_n_Gain_data[16] <bgcolor=cGreen> ; 
-
-// [2A B0] address pointer from 01DATA file
-// 8100h block size! 
-struct {
-    ushort value[32]; 
-} LIB_v_Gain_data[4] <bgcolor=cDkGreen>;
-
-struct{
-    short value[1024] ;
-} LIB_Sig[16] <bgcolor=cDkAqua>; 
-
-// Print a report to output 
-
-local int i = 0;
-local int j = 0;
-local float x = 0;
-local int factor = 0;
-local string format = "";
-
 Printf("%s \n", source_filename);
-Printf("ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
 
-for( i = 0; i < Amount_of_cars; i++ ) {
-    Printf("%i\t%02X\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
-        i, 
-        Car[i].Engine_code, 
-        Car[i].VIN_mask, 
-        Car[i].Charisma_01_Switch_Relapse_Clamp15, 
-        Car[i].Charisma_02_Switch_Gearbox, 
-        Car[i].Charisma_03_Default_driving_profile + 1,//these all need +1 for some reason, unless it's 255 
-        Car[i].Charisma_04_Reverse_driving_profile + 1,
-        Car[i].Charisma_05_Comfort_driving_profile + 1,
-        Car[i].Charisma_06_Normal_driving_profile + 1,
-        Car[i].Charisma_07_Sport_driving_profile + 1,
-        Car[i].Charisma_08_Offroad_driving_profile + 1,
-        Car[i].Charisma_09_Eco_driving_profile + 1,
-        Car[i].Charisma_10_Race_driving_profile + 1,
-        Car[i].Charisma_11_GTE_driving_profile + 1,
-        Car[i].Reserved_for_future_use_1,
-        Car[i].Reserved_for_future_use_2,
-        Car[i].Reserved_for_future_use_3
-    );
-} 					
+if (Gen2_5_flag != 7) {
 
-void PrintHeader( char name[] ) {
-    Printf("\n%s\n", name);
-    Printf("BOOST\t\t\tHYBRID\t\t\tEFFICIENCY\n");
-    Printf("Normal\tSport\tEco\tNormal\tSport\tEco\tNormal\tSport\n");
-}
-
-
-
-
-void PrintSheet12( char name[], struct sheet12x8 sheet, int factor, string format) {
-    PrintHeader( name );
-    for ( j = 0; j < 12; j++ ) {
-        for( i = 0; i < 8; i++ ) {
-            Printf(format, (float) sheet[i].value[j] / factor);
+    struct {
+        ubyte Engine_code <bgcolor=cDkGreen>;
+        char VIN_mask[17] <bgcolor=cGreen>;
+        ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
+        ubyte Charisma_02_Switch_Gearbox <bgcolor=cGreen>;
+        ubyte Charisma_03_Default_driving_profile <bgcolor=cDkGreen>;
+        ubyte Charisma_04_Reverse_driving_profile <bgcolor=cGreen>;
+        ubyte Charisma_05_Comfort_driving_profile <bgcolor=cDkGreen>;
+        ubyte Charisma_06_Normal_driving_profile <bgcolor=cGreen>;
+        ubyte Charisma_07_Sport_driving_profile <bgcolor=cDkGreen>;
+        ubyte Charisma_08_Offroad_driving_profile <bgcolor=cGreen>; 
+        ubyte Charisma_09_Eco_driving_profile <bgcolor=cDkGreen>;
+        ubyte Charisma_10_Race_driving_profile  <bgcolor=cGreen>;
+        ubyte Charisma_11_GTE_driving_profile  <bgcolor=cDkGreen>;
+        ubyte Reserved_for_future_use_1 <bgcolor=cGray>;  
+        ubyte Reserved_for_future_use_2 <bgcolor=cGray>;  
+        ubyte Reserved_for_future_use_3 <bgcolor=cGray>;  
+    } Car[Amount_of_cars];                                    
+    
+    // Engine codes
+    
+    // 07 - 0000 0111 - Kodiaq diesel Dxxx
+    // 0C - 0000 1100 - 2.0l CUNA diesel ?
+    // 13 - 0001 0011 - 1.4TSI GTE
+    // 14 - 0001 0100 - old-school A4 diesels 2.0l / 2.7l / 3.0l
+    // 29 - 0010 1001 - ??? A4 B9 diesel 
+    // 2A - 0010 1010 - ???
+    // 2B - 0010 1011 - 2.0l CJS / CJX
+    // 2D - 0010 1101 - A6 diesel ? 
+    // 42 - 0100 0010 - ???
+    // 45 - 0100 0101 - 2.0l CUPA diesel ?
+    // 48 - 0100 1000 - ??? A4 B9 diesel 
+    // 5A - 0101 1010 - ???
+    // 3F - 0011 1111 - ANY 
+    
+    typedef struct {
+        ushort value[12];
+    } sheet12x8[8];
+    
+    typedef struct {
+        ubyte value[12];
+    } sheet12x8bytes[8];
+    
+    typedef struct {
+        ushort value[8];
+    } sheet8x2[2];
+    
+    sheet12x8 ST_Gain <bgcolor=cDkAqua>; // block of 96 short values 
+    sheet12x8 ST_Phase <bgcolor=cDkYellow>; // block of 96 short values 
+    sheet12x8 ST_Pitch_Shift <bgcolor=cDkAqua>; // block of 96 short values 
+    sheet12x8 ST_Delay <bgcolor=cDkYellow>; // block of 96 short values 
+    sheet12x8bytes MX_m_Gain <bgcolor=cDkAqua>; // block of 96 byte values 
+    sheet12x8bytes MX_n_Gain <bgcolor=cDkYellow>; // block of 96 byte values 
+    sheet12x8bytes MX_v_Gain <bgcolor=cDkAqua>; // block of 96 byte values 
+    
+    if (Gain_table_flag > 0) {
+        // block of 96 byte values 
+        // this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
+        // but 5F 0001, 0002, 8K firmwares dont have it
+        sheet12x8bytes MX_Sig <bgcolor=cDkYellow>; 
+    }
+    
+    sheet8x2 SUM_Gain_Clip <bgcolor=cDkGreen>; // block of 16 short values. 
+    
+    // [06 30] address pointer from 01DATA file
+    ushort LIB_m_Gain_scale[32] <bgcolor=cGreen>; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
+    
+    // [06 70] address pointer from 01DATA file 
+    ushort LIB_n_Gain_Revs_scale[256] <bgcolor=cDkGreen>; // values in [500 - 8150] (rpm) range quanified by 16256
+    
+    // [08 70] address pointer from 01DATA file
+    ushort LIB_v_Gain_Speed_scale[32] <bgcolor=cGreen>; // values in [0 - 326.39] (km/h) range	
+    
+    // [08 B0] address pointer from 01DATA file
+    struct {
+        ushort value[32]; 
+    } LIB_m_Gain_data[8] <bgcolor=cDkGreen>;
+    
+    // [0A B0] address pointer from 01DATA file
+    // could be LIB_n_Gain quantified by 16256
+    // number of non-empty columns should be stored in MISC data, varies greatly from fw to fw
+    struct { 
+        ushort value[256]; 
+    } LIB_n_Gain_data[16] <bgcolor=cGreen> ; 
+    
+    // [2A B0] address pointer from 01DATA file
+    // 8100h block size! 
+    struct {
+        ushort value[32]; 
+    } LIB_v_Gain_data[4] <bgcolor=cDkGreen>;
+    
+    struct {
+        short value[1024] ;
+    } LIB_Sig[16] <bgcolor=cDkAqua>; 
+        
+    // Print a report to output 
+    Printf("ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
+    
+    for( i = 0; i < Amount_of_cars; i++ ) {
+        Printf("%i\t%02X\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
+            i, 
+            Car[i].Engine_code, 
+            Car[i].VIN_mask, 
+            Car[i].Charisma_01_Switch_Relapse_Clamp15, 
+            Car[i].Charisma_02_Switch_Gearbox, 
+            Car[i].Charisma_03_Default_driving_profile + 1,//these all need +1 for some reason, unless it's 255 
+            Car[i].Charisma_04_Reverse_driving_profile + 1,
+            Car[i].Charisma_05_Comfort_driving_profile + 1,
+            Car[i].Charisma_06_Normal_driving_profile + 1,
+            Car[i].Charisma_07_Sport_driving_profile + 1,
+            Car[i].Charisma_08_Offroad_driving_profile + 1,
+            Car[i].Charisma_09_Eco_driving_profile + 1,
+            Car[i].Charisma_10_Race_driving_profile + 1,
+            Car[i].Charisma_11_GTE_driving_profile + 1,
+            Car[i].Reserved_for_future_use_1,
+            Car[i].Reserved_for_future_use_2,
+            Car[i].Reserved_for_future_use_3
+        );
+    } 		
+    
+    
+    // SHORT spreadsheets 8x12
+    //PrintSheet12( string name, sheet sheet, int quantizationfactor, string format)"
+    PrintSheet12_Q16("Spreadsheet 1: ST_Gain", ST_Gain );
+    PrintSheet12("Spreadsheet 2: ST_Phase ???", ST_Phase, 1, "%.3g\t" );
+    PrintSheet12("Spreadsheet 3: ST_Pitch_Shift", ST_Pitch_Shift, 65536, "%.3g\t");
+    PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
+    
+    
+    // BYTE spreadsheets 8x12
+    PrintSheet12b("Spreadsheet 5: MX_m_Gain", MX_m_Gain);
+    PrintSheet12b("Spreadsheet 6: MX_n_Gain", MX_n_Gain);
+    PrintSheet12b("Spreadsheet 7: MX_v_Gain", MX_v_Gain);
+    if (Gain_table_flag > 0) {
+        PrintSheet12b("Spreadsheet 8: MX Sig", MX_Sig);
+    }
+    
+    // USHORT spreadsheet 8x2
+    PrintSheet2("Spreadsheet 9: SUM_Gain_Clip", SUM_Gain_Clip);
+    
+    /*
+    // Increase / Decrease revs scale ???
+    // could be useful for popcorn effect
+    Printf("\nSpreadsheet 10: LIB_m_Gain\nHEADER\tDATA\n");
+    for( i = 0; i < 32; i++ ) {
+        Printf("%.2f", (float) LIB_m_Gain_scale[i] / 32768 - 1);
+        for( j = 0; j < 8; j++ ) {
+            Printf("\t%.4f", (float) LIB_m_Gain_data[j].value[i] / 65536);
         }
         Printf("\n");
-    };
-}
-
-
-void PrintSheet12_Q16( char name[], struct sheet12x8 sheet) {
-    PrintHeader( name );
-    for( j = 0; j < 12; j++ ) {
-        for ( i = 0; i < 8; i++ ) {
-            // there is definitelly a rounding issue exists
-            // trying to compensate it with 1.006 multiplier
-            x = (float) sheet[i].value[j] * 1.006 / 16;
-            Printf("%.3g°\t", x);
+    }
+    
+    Printf("\nSpreadsheet 11: LIB_n_Gain_Revs\nHEADER\tDATA\n");
+    for( i = 0; i < 256; i++ ) {
+        Printf("%i", (float) LIB_n_Gain_Revs_scale[i] / 65536 * 16384);
+        for( j = 0; j < 16; j++ ) {
+            Printf("\t%.4f", (float) LIB_n_Gain_data[j].value[i] / 65536);
         }
         Printf("\n");
-    };			 
-} 
-
-
-void PrintSheet12b( char name[], struct sheet12x8bytes sheet) {
-    PrintHeader( name + " UBYTE" );
-    for ( j = 0; j < 12; j++ ) {
-        for( i = 0; i < 8; i++ ) {
-            Printf("%i\t", sheet[i].value[j] + 1); // not sure do we need this +1
+    }
+    
+    Printf("\nSpreadsheet 12: LIB_v_Gain_Speed\nHEADER\tDATA\n");
+    for( i = 0; i < 32; i++ ) {
+        // real scale for this header column is the percentage [0 - 100%] from 326.39 value
+        // multipliying it to 3.2639 shows absolute speed
+        // (VW e-UP! is limited to 150kmh)
+        Printf("%.2f", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
+        for( j = 0; j < 4; j++ ) {
+            Printf("\t%.4f", (float) LIB_v_Gain_data[j].value[i] / 65536);
         }
         Printf("\n");
-    };			 
-} 
-
-void PrintSheet2( char name[], struct sheet8x2 sheet) {
-    PrintHeader( name + " USHORT" );
-    for ( j = 0; j < 8; j++ ) {
-        Printf("%.3g\t", (float) sheet[0].value[j]/65536 * 2); // 0 < X < 1 // Q:65536
     }
-    Printf("\n");
-    for ( j = 0; j < 8; j++ ) {
-        Printf("%.3g\t", (float) sheet[1].value[j]/65536 * 512); // 0 < X < 8 // Q:65536
+    
+    
+    Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
+    for( i = 0; i < 1024; i++ ) {
+        for( j = 0; j < 16; j++ ) {
+            Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+        }
+        Printf("\n");
     }
-    Printf("\n");
-} 
+    */
+} else {
 
-// SHORT spreadsheets 8x12
-//PrintSheet12( string name, sheet sheet, int quantizationfactor, string format)"
-PrintSheet12_Q16("Spreadsheet 1: ST_Gain", ST_Gain );
-PrintSheet12("Spreadsheet 2: ST_Phase ???", ST_Phase, 1, "%.3g\t" );
-PrintSheet12("Spreadsheet 3: ST_Pitch_Shift", ST_Pitch_Shift, 65536, "%.3g\t");
-PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
+    FSeek(162);
+    
+    struct {
+        ubyte Engine_code <bgcolor=cDkGreen>;
+        char VIN_mask[17] <bgcolor=cGreen>;
+    
+        char unknown_19 <bgcolor=cDkYellow>;   
+        char unknown_20 <bgcolor=cYellow>;
+        char unknown_21 <bgcolor=cDkYellow>;
+        ubyte unknown_22 <bgcolor=cYellow>;   
+        ubyte unknown_23 <bgcolor=cDkYellow>;
+        ubyte unknown_24 <bgcolor=cYellow>;
+        char unknown_25 <bgcolor=cDkYellow>;
+        ubyte unknown_26 <bgcolor=cYellow>;
+    } Car[Amount_of_cars];  
+    
+    struct {
+        ubyte unknown_1 <bgcolor=cDkAqua>;
+        ubyte unknown_2 <bgcolor=cAqua>;
+        ubyte unknown_3 <bgcolor=cAqua>;
+        ubyte unknown_4 <bgcolor=cAqua>;
+        ubyte unknown_5 <bgcolor=cAqua>;
+        ubyte unknown_6 <bgcolor=cAqua>;
+    } Charisma_maybe[10];
+    
+    FSeek(752);
+    
+    typedef struct {
+        ubyte value[16];
+    } table16x8[8];
+    
+    typedef struct {
+        ubyte value[32];
+    } table32x8[8];
+    
+    typedef struct {
+        ushort value[16];
+    } table16x16[16];
+    
+    struct {
+        ubyte value[28];
+    } table28x8[8]  <bgcolor=cDkYellow>;
+    
+    table32x8 unknown_table_1 <bgcolor=cDkAqua>;
+    table32x8 unknown_table_2 <bgcolor=cDkYellow>;
+    table32x8 unknown_table_3 <bgcolor=cDkAqua>;
+    table32x8 unknown_table_4 <bgcolor=cDkYellow>;
+    table16x8 unknown_table_5 <bgcolor=cDkAqua>; // something about charisma 
+    
+    // first line is probably a table header, this explains 1+16 number of rows
+    struct {
+        ushort value[256];
+    } table256x17[17] <bgcolor=cDkYellow>;
+    
+    FSeek(10832); // [2A 50]
 
-
-
-
-
-// BYTE spreadsheets 8x12
-PrintSheet12b("Spreadsheet 5: MX_m_Gain", MX_m_Gain);
-PrintSheet12b("Spreadsheet 6: MX_n_Gain", MX_n_Gain);
-PrintSheet12b("Spreadsheet 7: MX_v_Gain", MX_v_Gain);
-if (Gain_table_flag > 0) {
-    PrintSheet12b("Spreadsheet 8: MX Sig", MX_Sig);
-}
-
-// USHORT spreadsheet 8x2
-PrintSheet2("Spreadsheet 9: SUM_Gain_Clip", SUM_Gain_Clip);
-
-
-// Increase / Decrease revs scale ???
-// could be useful for popcorn effect
-Printf("\nSpreadsheet 10: LIB_m_Gain\nHEADER\tDATA\n");
-for( i = 0; i < 32; i++ ) {
-    Printf("%.2f", (float) LIB_m_Gain_scale[i] / 32768 - 1);
-    for( j = 0; j < 8; j++ ) {
-        Printf("\t%.4f", (float) LIB_m_Gain_data[j].value[i] / 65536);
-    }
-    Printf("\n");
-}
-
-Printf("\nSpreadsheet 11: LIB_n_Gain_Revs\nHEADER\tDATA\n");
-for( i = 0; i < 256; i++ ) {
-    Printf("%i", (float) LIB_n_Gain_Revs_scale[i] / 65536 * 16384);
-    for( j = 0; j < 16; j++ ) {
-        Printf("\t%.4f", (float) LIB_n_Gain_data[j].value[i] / 65536);
-    }
-    Printf("\n");
-}
-
-Printf("\nSpreadsheet 12: LIB_v_Gain_Speed\nHEADER\tDATA\n");
-for( i = 0; i < 32; i++ ) {
-    // real scale for this header column is the percentage [0 - 100%] from 326.39 value
-    // multipliying it to 3.2639 shows absolute speed
-    // (VW e-UP! is limited to 150kmh)
-    Printf("%.2f", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
-    for( j = 0; j < 4; j++ ) {
-        Printf("\t%.4f", (float) LIB_v_Gain_data[j].value[i] / 65536);
-    }
-    Printf("\n");
-}
-
-
-Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
-for( i = 0; i < 1024; i++ ) {
-    for( j = 0; j < 16; j++ ) {
-        Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
-    }
-    Printf("\n");
+    struct {
+        ubyte value[4];
+    } table4x32[32] <bgcolor=cAqua>;
+    
+    struct {
+        ushort value[32];
+    } table32x9[9] <bgcolor=cDkAqua>; // 1+8 rows, LIB_m_Gain_data ???
+    
+    table16x8 unknown_table_6 <bgcolor=cDkYellow>;
+    
+    // Print a report to output 
+    Printf("ID\tEngine\tVIN\t\tunknown_19\tunknown_20\tunknown_21\tunknown_22\tunknown_23\tunknown_24\tunknown_25\tunknown_26\n");
+    
+    for( i = 0; i < Amount_of_cars; i++ ) {
+        Printf("%i\t%02X\t%s\t%s\t%s\t%s\t%i\t%i\t%i\t%s\t%i\n", 
+            i, 
+            Car[i].Engine_code, 
+            Car[i].VIN_mask, 
+            Car[i].unknown_19, 
+            Car[i].unknown_20, 
+            Car[i].unknown_21,
+            Car[i].unknown_22,
+            Car[i].unknown_23,
+            Car[i].unknown_24,
+            Car[i].unknown_25,
+            Car[i].unknown_26
+        );
+    } 	
 }
