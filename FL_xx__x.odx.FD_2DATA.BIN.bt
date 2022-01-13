@@ -3,7 +3,7 @@
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
 //   Authors: Jille, Dark, Borg123
-//   Version: 0.6
+//   Version: 0.8
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
 // File Mask: 
@@ -16,6 +16,7 @@
 //            0.5 - Transposed some tables to be viewed in the right way
 //            0.6 - Added Lib_Sig (whatever it may be.. noise signature?)
 //            0.7 - template code cleanup, started GEN2.5 parsing
+//            0.8 - Checksum mechanism included
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -23,7 +24,7 @@
 // green       = confirmed
 // gray        = seemingly irrelevant
 // blue        = special
-// purple      = potential checksum
+// purple      = checksum
 
 // LOCAL VARIABLES
 
@@ -32,6 +33,9 @@ local int j = 0;
 local float x = 0;
 local int factor = 0;
 local string format = "";
+local int start = 2;
+local int end = 0xE000;
+local uint64 calculated_checksum = 0;
 
 // FUNCTIONS
 
@@ -89,7 +93,7 @@ void PrintSheet2( char name[], struct sheet8x2 sheet) {
 // START PARSING
 
 LittleEndian();
-ushort unknown_1 <bgcolor=cPurple >; //some kind of checksum? 
+ushort checksum <bgcolor=cPurple >;
 ubyte Gen2_5_flag <bgcolor=cDkYellow>; // looks like a flag for GEN2.5 version
 ubyte Gain_table_flag <bgcolor=cYellow>; // looks like a flag / counter for additional Gain tables
 ushort Amount_of_cars <bgcolor=cDkYellow>; // doesn't change between versions. 8, possibly the amount of cars?
@@ -118,7 +122,7 @@ ushort Damping_factor_for_something <bgcolor=cYellow>; // Range 0-65535 identica
 // could also be the Offset where the filename starts.
 
 FSeek(62);
-ushort source_filename_checksum <bgcolor=cBlack>;// CRC16-CCITT
+ushort source_filename_checksum <bgcolor=cPurple>;// CRC16-CCITT
 char source_filename[64] <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_SoundProfiles_SP <bgcolor=cGreen>; 
 ushort Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
@@ -408,3 +412,18 @@ if (Gen2_5_flag != 7) {
         );
     } 	
 }
+
+for (i=start;i<end;i+=2){
+        calculated_checksum = calculated_checksum + ReadUShort(i);
+}
+calculated_checksum = ((calculated_checksum-1) & 0xffff)^0xffff;
+
+Printf("\nChecksum in file:\t\t%x\nCalculated checksum:\t%x \n", checksum, calculated_checksum);
+
+
+if (calculated_checksum == checksum) {
+Printf("\nChecksum is correct!!\n");
+}
+
+// CRC adlatus is calculated by:
+// CRC-32         00000000 poly:         104c11db7 init:         00000000 xor:         00000000 REVERSED PERMUTATION
