@@ -38,6 +38,8 @@ local int start = 2;
 local int end = 0xE000;
 local uint64 calculated_checksum = 0;
 local int extended_output = 0;
+local int csv_output = 0;
+local int new_file = 0;
 
 // FUNCTIONS
 
@@ -128,6 +130,10 @@ void PrintSheet2( char name[], struct sheet8x2 sheet) {
 } 
 
 extended_output = InputRadioButtonBox("Output Format", "Choose output format", 0, "Normal", "Extended (takes some more time)");
+if (extended_output == 1){
+    csv_output = InputRadioButtonBox("Output signal table as new file?", "COutput signal table as new file?", 0, "No", "Yes");
+    new_file = FileNew("Text",0);
+}
 
 // START PARSING
 LittleEndian();
@@ -341,8 +347,14 @@ if (Gen2_5_flag != 7) {
         for( i = 0; i < 1024; i++ ) {
             for( j = 0; j < 16; j++ ) {
                 Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+                if (csv_output ==1){
+                    FPrintf(new_file,"%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+                }
             }
             Printf("\n");
+            if (csv_output ==1){
+                FPrintf(new_file,"\n");
+                }
         }
     }
    
@@ -413,7 +425,7 @@ if (Gen2_5_flag != 7) {
     } table32x9[9] <bgcolor=cDkAqua>; // 1+8 rows, LIB_m_Gain_data ???
     
     table16x8 unknown_table_6 <bgcolor=cDkYellow>;
-    
+
     // Print a report to output 
     Printf("ID\tEngine\tVIN\t\tunknown_19\tunknown_20\tunknown_21\tunknown_22\tunknown_23\tunknown_24\tunknown_25\tunknown_26\n");
     
