@@ -5,7 +5,7 @@
 //   Authors: Jille, Dark, Borg123
 //   Version: 0.9
 //   Purpose: Parse the contents of the MQB soundaktor firmware
-//  Category: 
+//  Category
 // File Mask: 
 //  ID Bytes: 
 //   History: 0.1 - Initial version
@@ -131,8 +131,11 @@ void PrintSheet2( char name[], struct sheet8x2 sheet) {
 
 extended_output = InputRadioButtonBox("Output Format", "Choose output format", 0, "Normal", "Extended (takes some more time)");
 if (extended_output == 1){
-    csv_output = InputRadioButtonBox("Output signal table as new file?", "COutput signal table as new file?", 0, "No", "Yes");
-    new_file = FileNew("Text",0);
+    csv_output = InputRadioButtonBox("Output signal table as new file?", "Output signal table as new file?", 0, "No", "Yes");
+    if (csv_output == 1)
+    {
+        new_file = FileNew("Text",0);
+    }
 }
 
 // START PARSING
@@ -346,9 +349,9 @@ if (Gen2_5_flag != 7) {
         Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
         for( i = 0; i < 1024; i++ ) {
             for( j = 0; j < 16; j++ ) {
-                Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+                Printf("%.8f\t", (float) LIB_Sig[j].value[i]);
                 if (csv_output ==1){
-                    FPrintf(new_file,"%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+                    FPrintf(new_file,"%.8f\t", (float) LIB_Sig[j].value[i]);
                 }
             }
             Printf("\n");
