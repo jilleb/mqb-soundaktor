@@ -3,7 +3,7 @@
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
 //   Authors: Jille, Dark, Borg123
-//   Version: 0.8
+//   Version: 0.9
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
 // File Mask: 
@@ -17,6 +17,7 @@
 //            0.6 - Added Lib_Sig (whatever it may be.. noise signature?)
 //            0.7 - template code cleanup, started GEN2.5 parsing
 //            0.8 - Checksum mechanism included
+//            0.9 - Some helper functions
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -36,8 +37,44 @@ local string format = "";
 local int start = 2;
 local int end = 0xE000;
 local uint64 calculated_checksum = 0;
+local int extended_output = 0;
 
 // FUNCTIONS
+
+
+// Helper functions:
+string getSignalTableResolution(int value){
+    switch (value){
+        case 0x00: return "512 base points, max 32 Signals";
+        case 0x01: return "1024 base points, max 16 Signals";
+        case 0x02: return "2048 base points, max 8 Signals";
+        case 0x03: return "4096 base points, max 4 Signals";
+        case 0x04: return "8192 base points, max 2 Signals";
+        case 0x05: return "16384 base points, max 1 Signals";
+        default:   return "Unknown"; 
+        }
+}
+
+// todo: add more known engines
+string getEngineType(int value){
+    switch (value){
+        case 0x07: return "Kodiaq diesel Dxxx";
+        case 0x0C: return "2.0l CUNA diesel ?";
+        case 0x13: return "1.4TSI GTE";
+        case 0x14: return "old-school A4 diesels 2.0l / 2.7l / 3.0l";
+        case 0x29: return "??? A4 B9 diesel";
+        case 0x2A: return "Unknown";
+        case 0x2B: return "2.0l CJS / CJX";
+        case 0x2D: return "A6 diesel ?" ;
+        case 0x3F: return "Any engine"; 
+        case 0x42: return "???";
+        case 0x45: return "2.0l CUPA diesel ?";
+        case 0x48: return "??? A4 B9 diesel"; 
+        case 0x5A: return "Unknown";
+        default:   return "Unknown"; 
+        }
+}
+
 
 void PrintHeader( char name[] ) {
     Printf("\n%s\n", name);
@@ -90,8 +127,9 @@ void PrintSheet2( char name[], struct sheet8x2 sheet) {
     Printf("\n");
 } 
 
-// START PARSING
+extended_output = InputRadioButtonBox("Output Format", "Choose output format", 0, "Normal", "Extended (takes some more time)");
 
+// START PARSING
 LittleEndian();
 ushort checksum <bgcolor=cPurple >;
 ubyte Gen2_5_flag <bgcolor=cDkYellow>; // looks like a flag for GEN2.5 version
@@ -129,12 +167,8 @@ ushort Amount_of_Defined_AmplitudeFunctions_AF <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_LoadFunctions_LF <bgcolor=cGreen>; 
 ushort Amount_of_Defined_SpeedFunctions_GF <bgcolor=cDkGreen>;
 ushort Amount_of_Defined_SignalFunctions_SF <bgcolor=cGreen>; 
-ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen>;
-// 0: 512 Support points, max 32 Signals 
-// 1: 1024 Support points, max 16 Signals  
-// 2: 2048 Support points, max 8 Signals
-// 3: 4096 Support points, max 4 Signals
-// 4: 8192 Support points, max 2 Signals
+ushort Selected_resolution_for_signal_table <bgcolor=cDkGreen, read=getSignalTableResolution>;
+
 
 short Damping_factor_for_actuator_test <bgcolor=cGreen>; // Range 0-65535
 short Reserved_for_future_use <bgcolor=cGray>;
@@ -144,7 +178,7 @@ Printf("%s \n", source_filename);
 if (Gen2_5_flag != 7) {
 
     struct {
-        ubyte Engine_code <bgcolor=cDkGreen>;
+        ubyte Engine_code <bgcolor=cDkGreen, read=getEngineType>;
         char VIN_mask[17] <bgcolor=cGreen>;
         ubyte Charisma_01_Switch_Relapse_Clamp15 <bgcolor=cDkGreen>;   
         ubyte Charisma_02_Switch_Gearbox <bgcolor=cGreen>;
@@ -161,22 +195,7 @@ if (Gen2_5_flag != 7) {
         ubyte Reserved_for_future_use_2 <bgcolor=cGray>;  
         ubyte Reserved_for_future_use_3 <bgcolor=cGray>;  
     } Car[Amount_of_cars];                                    
-    
-    // Engine codes
-    
-    // 07 - 0000 0111 - Kodiaq diesel Dxxx
-    // 0C - 0000 1100 - 2.0l CUNA diesel ?
-    // 13 - 0001 0011 - 1.4TSI GTE
-    // 14 - 0001 0100 - old-school A4 diesels 2.0l / 2.7l / 3.0l
-    // 29 - 0010 1001 - ??? A4 B9 diesel 
-    // 2A - 0010 1010 - ???
-    // 2B - 0010 1011 - 2.0l CJS / CJX
-    // 2D - 0010 1101 - A6 diesel ? 
-    // 42 - 0100 0010 - ???
-    // 45 - 0100 0101 - 2.0l CUPA diesel ?
-    // 48 - 0100 1000 - ??? A4 B9 diesel 
-    // 5A - 0101 1010 - ???
-    // 3F - 0011 1111 - ANY 
+   
     
     typedef struct {
         ushort value[12];
@@ -239,12 +258,13 @@ if (Gen2_5_flag != 7) {
     } LIB_Sig[16] <bgcolor=cDkAqua>; 
         
     // Print a report to output 
-    Printf("ID\tEngine\tVIN\t\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
+    Printf("ID\tEngine\t\tVIN\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tRFU1\tRFU2\tRFU3\t\n");
     
     for( i = 0; i < Amount_of_cars; i++ ) {
-        Printf("%i\t%02X\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
+        Printf("%i\t%02X (%s)\t%s\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%i\n", 
             i, 
-            Car[i].Engine_code, 
+            Car[i].Engine_code,
+            getEngineType(Car[i].Engine_code), 
             Car[i].VIN_mask, 
             Car[i].Charisma_01_Switch_Relapse_Clamp15, 
             Car[i].Charisma_02_Switch_Gearbox, 
@@ -283,48 +303,49 @@ if (Gen2_5_flag != 7) {
     // USHORT spreadsheet 8x2
     PrintSheet2("Spreadsheet 9: SUM_Gain_Clip", SUM_Gain_Clip);
     
-    /*
-    // Increase / Decrease revs scale ???
-    // could be useful for popcorn effect
-    Printf("\nSpreadsheet 10: LIB_m_Gain\nHEADER\tDATA\n");
-    for( i = 0; i < 32; i++ ) {
-        Printf("%.2f", (float) LIB_m_Gain_scale[i] / 32768 - 1);
-        for( j = 0; j < 8; j++ ) {
-            Printf("\t%.4f", (float) LIB_m_Gain_data[j].value[i] / 65536);
+    if (extended_output == 1) {
+        // Increase / Decrease revs scale ???
+        // could be useful for popcorn effect
+        Printf("\nSpreadsheet 10: LIB_m_Gain\nHEADER\tDATA\n");
+        for( i = 0; i < 32; i++ ) {
+            Printf("%.2f", (float) LIB_m_Gain_scale[i] / 32768 - 1);
+            for( j = 0; j < 8; j++ ) {
+                Printf("\t%.4f", (float) LIB_m_Gain_data[j].value[i] / 65536);
+            }
+            Printf("\n");
         }
-        Printf("\n");
-    }
-    
-    Printf("\nSpreadsheet 11: LIB_n_Gain_Revs\nHEADER\tDATA\n");
-    for( i = 0; i < 256; i++ ) {
-        Printf("%i", (float) LIB_n_Gain_Revs_scale[i] / 65536 * 16384);
-        for( j = 0; j < 16; j++ ) {
-            Printf("\t%.4f", (float) LIB_n_Gain_data[j].value[i] / 65536);
+        
+        Printf("\nSpreadsheet 11: LIB_n_Gain_Revs\nHEADER\tDATA\n");
+        for( i = 0; i < 256; i++ ) {
+            Printf("%i", (float) LIB_n_Gain_Revs_scale[i] / 65536 * 16384);
+            for( j = 0; j < 16; j++ ) {
+                Printf("\t%.4f", (float) LIB_n_Gain_data[j].value[i] / 65536);
+            }
+            Printf("\n");
         }
-        Printf("\n");
-    }
-    
-    Printf("\nSpreadsheet 12: LIB_v_Gain_Speed\nHEADER\tDATA\n");
-    for( i = 0; i < 32; i++ ) {
-        // real scale for this header column is the percentage [0 - 100%] from 326.39 value
-        // multipliying it to 3.2639 shows absolute speed
-        // (VW e-UP! is limited to 150kmh)
-        Printf("%.2f", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
-        for( j = 0; j < 4; j++ ) {
-            Printf("\t%.4f", (float) LIB_v_Gain_data[j].value[i] / 65536);
+        
+        Printf("\nSpreadsheet 12: LIB_v_Gain_Speed\nHEADER\tDATA\n");
+        for( i = 0; i < 32; i++ ) {
+            // real scale for this header column is the percentage [0 - 100%] from 326.39 value
+            // multipliying it to 3.2639 shows absolute speed
+            // (VW e-UP! is limited to 150kmh)
+            Printf("%.2f", (float) LIB_v_Gain_Speed_scale[i] / 326.39 * 3.2639);
+            for( j = 0; j < 4; j++ ) {
+                Printf("\t%.4f", (float) LIB_v_Gain_data[j].value[i] / 65536);
+            }
+            Printf("\n");
         }
-        Printf("\n");
-    }
-    
-    
-    Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
-    for( i = 0; i < 1024; i++ ) {
-        for( j = 0; j < 16; j++ ) {
-            Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+        
+        
+        Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
+        for( i = 0; i < 1024; i++ ) {
+            for( j = 0; j < 16; j++ ) {
+                Printf("%.8f\t", (float) LIB_Sig[j].value[i]/32768);
+            }
+            Printf("\n");
         }
-        Printf("\n");
     }
-    */
+   
 } else {
 
     FSeek(162);
