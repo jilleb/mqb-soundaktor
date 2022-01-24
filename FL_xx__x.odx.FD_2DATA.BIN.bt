@@ -464,6 +464,14 @@ if (!GEN25){
     PrintSheet12("Spreadsheet 2: ST_Phase ???", Phase_Effect, 1, "%.3g\t" );
     PrintSheet12("Spreadsheet 3: ST_Pitch_Shift", Pitch_Shift_Effect, 65536, "%.3g\t");
     //PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
+
+Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
+for( i = 0; i < 2048; i++ ) {
+    for( j = 0; j < 8; j++ ) {
+        Printf("%.8f\t", (float) Samples[j].value[i]/32768);
+    }
+    Printf("\n");
+}
     
     
     // BYTE spreadsheets 8x12
