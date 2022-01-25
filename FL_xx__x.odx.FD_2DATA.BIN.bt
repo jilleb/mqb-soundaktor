@@ -466,8 +466,8 @@ if (!GEN25){
     //PrintSheet12("Spreadsheet 4: ST Delay", ST_Delay, 1, "%i\t" );
 
 Printf("\nSpreadsheet 13: LIB_Sig\nHEADER\tDATA\n");
-for( i = 0; i < 2048; i++ ) {
-    for( j = 0; j < 8; j++ ) {
+for( i = 0; i < Sample_length; i++ ) {
+    for( j = 0; j < Samples_count; j++ ) {
         Printf("%.8f\t", (float) Samples[j].value[i]/32768);
     }
     Printf("\n");
