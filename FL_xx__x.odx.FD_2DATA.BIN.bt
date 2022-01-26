@@ -20,6 +20,7 @@
 //            0.9 - GEN2 finished, GEN2.5 work in progress
 //            0.9.1 - several more table params for GEN2.5
 //            0.9.8 - parsed and printed everything except SUM_DATA and MX_PROFILE
+//            0.9.9 - MX_Profile parsed									   
 //------------------------------------------------
 // legend: 
 // yellow/aqua = uncertain
@@ -32,11 +33,9 @@
 
 local int i = 0;
 local int j = 0;
-local int k = 0;
 local float x = 0;
 local int factor = 0;
 local string format = "";
-local int checksum = -1;
 local int start = 0x02;
 local int end = 0xE000;
 local string output = "";
@@ -155,18 +154,23 @@ string getSumEffect(int effectNumber) {
 
 LittleEndian();
 
-ushort file_checksum <bgcolor = cRed> ; //some kind of checksum? 
+ushort file_checksum <bgcolor = cRed> ;
 byte unknown_2 <bgcolor = cDkYellow> ;
 byte Gain_table_flag <bgcolor = cYellow> ;
 
 ushort DEFAULTS_Profiles <bgcolor = cDkAqua> ;
-ushort DEFAULTS_Effects <bgcolor = cAqua> ;
+if (!GEN25) {
+    ushort DEFAULTS_Effects <bgcolor=cAqua>; 
+} else {
+    local int DEFAULTS_Effects = 16;
+}	
 ushort DEFAULTS_RevsFunctions <bgcolor = cDkAqua> ; // engine revolutions     / LIB_n_Gain
 ushort DEFAULTS_AccelFunctions <bgcolor = cAqua> ; // acceleration / G-meter / LIB_m_Gain
 ushort DEFAULTS_SpeedFunctions <bgcolor = cDkAqua> ; // speed                  / LIB_v_Gain
 
 if (GEN25) {
-    ushort unknown_8 <bgcolor = cYellow> ;
+    ushort DEFAULTS_PedalFunctions <bgcolor=cAqua>; // pedal                / LIB_p_Gain
+    ushort DEFAULTS_Samples_count <bgcolor=cYellow>;
     ushort unknown_9 <bgcolor = cDkYellow> ;
     ushort unknown_10 <bgcolor = cYellow> ;
     ushort unknown_11 <bgcolor = cDkYellow> ;
@@ -180,12 +184,16 @@ if (GEN25) {
 }
 
 ushort DEFAULTS_Profiles_2 <bgcolor = cDkAqua> ;
-ushort DEFAULTS_Effects_2 <bgcolor = cAqua> ;
+if (!GEN25) {
+    ushort DEFAULTS_Effects_2 <bgcolor=cAqua>;
+}
 ushort DEFAULTS_RevsFunctions_2 <bgcolor = cDkAqua> ;
 ushort DEFAULTS_AccelFunctions_2 <bgcolor = cAqua> ;
 ushort DEFAULTS_SpeedFunctions_2 <bgcolor = cDkAqua> ;
 
 if (GEN25) {
+    ushort DEFAULTS_PedalFunctions_2 <bgcolor=cAqua>;
+    ushort DEFAULTS_Samples_count_2 <bgcolor=cYellow>;
     ushort DEFAULTS_Samples_count <bgcolor = cYellow> ;
     ushort DEFAULTS_Sample_Rate <bgcolor = cDkYellow, read = getSampleRate> ;
     ushort unknown_14 <bgcolor = cYellow> ;
@@ -208,7 +216,6 @@ ushort source_filename_checksum <bgcolor = cRed> ; // CRC16-CCITT
 char source_filename[64] <bgcolor = cDkGreen> ;
 
 ushort Profiles <bgcolor = cDkAqua> ;
-
 ushort RevsFunctions <bgcolor = cAqua> ;
 ushort AccelFunctions <bgcolor = cDkAqua> ;
 ushort SpeedFunctions <bgcolor = cAqua> ;
@@ -256,48 +263,49 @@ if (!GEN25) {
         ubyte HighPass_filter <bgcolor = cGreen, read = getFilterProperties> ;
         ubyte Reserved_for_future_use_2 <bgcolor = cGray> ;
         ubyte Reserved_for_future_use_3: 6 <bgcolor = cGray> ;
-        ubyte Reset_behavior: 1 <read = getResetBehavior> ; // 335 only
-        ubyte PHEV_button_led: 1 <read = getLedMode> ; // 335 only
+        ubyte Reset_behavior: 1 <read = getResetBehavior> ;
+        ubyte PHEV_button_led: 1 <read = getLedMode> ;
     }
     Car[Profiles];
+
     struct { // ST_Gain
         ushort value[DEFAULTS_Effects];
-    }
-    Gain_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Gain_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     struct { // ST_Phase
         ushort value[DEFAULTS_Effects];
-    }
-    Phase_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Phase_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     struct { // ST_Pitch_Shift
         ushort value[DEFAULTS_Effects];
-    }
-    Pitch_Shift_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Pitch_Shift_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     struct { // ST_Delay
         ushort value[DEFAULTS_Effects];
-    }
-    Delay_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Delay_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     struct {
         byte value[DEFAULTS_Effects];
-    }
-    Effects_to_Accel[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Effects_to_Accel[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     struct {
         byte value[DEFAULTS_Effects];
-    }
-    Effects_to_Revs[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Effects_to_Revs[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     struct {
         byte value[DEFAULTS_Effects];
-    }
-    Effects_to_Speed[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Effects_to_Speed[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     // general table to apply effects on the final sound of every car profile
     if (Gain_table_flag> 0) {
         // this gain table appears only in newer firmware: 5F 0003+, 8S, 8W
         // but 5F 0001, 0002, 8K firmwares dont have it
         struct {
             byte value[DEFAULTS_Effects];
-        }
-        Effects_to_Profiles[Profiles] <bgcolor = cGreen, optimize = true> ;
+        } Effects_to_Profiles[Profiles] <bgcolor = cGreen, optimize = true> ;
     }
-    struct {
+
+    struct { // MX_Sig
         ushort gain[Profiles];
         ushort clip[Profiles];
     } Effects_to_Samples <bgcolor = cDkGreen> ;
@@ -307,21 +315,19 @@ if (!GEN25) {
     ushort Speed_Scale[DEFAULTS_Speed_length] <bgcolor = cGreen> ; // values in [0 - 326.39] (km/h) range	
     struct { // LIB_m_Gain
         ushort value[DEFAULTS_Acceleration_length];
-    }
-    Acceleration[AccelFunctions] <bgcolor = cDkGreen, optimize = true> ;
+    } Acceleration[AccelFunctions] <bgcolor = cDkGreen, optimize = true> ;
+
     struct { // LIB_n_Gain
         ushort value[DEFAULTS_Revolutions_length];
-    }
-    Revolutions[RevsFunctions] <bgcolor = cGreen, optimize = true> ;
+    } Revolutions[RevsFunctions] <bgcolor = cGreen, optimize = true> ;
+
     struct { // LIB_v_Gain
         ushort value[DEFAULTS_Speed_length];
-    }
-    Speed[SpeedFunctions] <bgcolor = cDkGreen, optimize = true> ;
+    } Speed[SpeedFunctions] <bgcolor = cDkGreen, optimize = true> ;
 
     struct { // LIB_Sig
         short value[getIntegerSampleRate(Sample_Rate)];
-    }
-    Samples[Samples_count] <bgcolor = cDkAqua, optimize = true> ;
+    } Samples[Samples_count] <bgcolor = cDkAqua, optimize = true> ;
 
     // Print a report to output 
     Printf("ID\tEngine\tVIN\tRelapseKl15\tGearbox\tDefault\tReverse\tComfort\tNormal\tSport\tOffroad\tEco\tRace\tGTE\tHighPass\tRFU2\tResetBeh\tLED\n");
@@ -367,82 +373,86 @@ if (!GEN25) {
         char FPA_installed <bgcolor = cGreen> ;
         ubyte unknown_25 <bgcolor = cDkYellow> ;
         ubyte FPA_id <bgcolor = cDkGreen> ;
+    } Car[Profiles];
+
+    // local int MXP_y = 32;
+    // local int MXP_x = 12;
+    local int SUM_x = 14; // 19
+    if (Gain_table_flag == 3) {
+        SUM_x = 19;
     }
-    Car[Profiles];
+
+    // struct {
+    //     ubyte unknown[MXP_x];
+    // } 
+    ubyte MX_Profile[384] <bgcolor=cDkAqua, optimize=true>;
 
     struct {
-        ubyte unknown[48];
-    }
-    MX_Profile[Profiles] <bgcolor = cDkAqua, optimize = true> ;
+        ushort value[SUM_x]; // there is NO parameter with such a value and sometimes it is 19 !!!! 
+    } SUM_data[Profiles] <bgcolor = cAqua, optimize=true> ;
 
     struct {
-        ushort value[14]; // there is NO parameter with such a value and sometimes it is 19 !!!! 
-    }
-    SUM_data[Profiles] <bgcolor = cAqua> ;
+        ushort value[DEFAULTS_Effects];
+    } Gain_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     struct {
         ushort value[DEFAULTS_Effects];
-    }
-    Gain_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Pitch_Shift_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     struct {
         ushort value[DEFAULTS_Effects];
-    }
-    Pitch_Shift_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Phase_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     struct {
         ushort value[DEFAULTS_Effects];
-    }
-    Phase_Effect[Profiles] <bgcolor = cDkGreen, optimize = true> ;
-    struct {
-        ushort value[DEFAULTS_Effects];
-    }
-    Delay_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Delay_Effect[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     struct {
         ubyte value[DEFAULTS_Effects];
-    }
-    Effects_to_Revs[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Effects_to_Revs[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     ushort Revolutions_Scale[DEFAULTS_Revolutions_length] <bgcolor = cGreen> ; // values in [500 - 8150] (rpm) range quanified by 16256
     struct { // LIB_n_Gain 
         ushort value[DEFAULTS_Revolutions_length];
-    }
-    Revolutions[RevsFunctions] <bgcolor = cDkGreen, optimize = true> ;
+    } Revolutions[RevsFunctions] <bgcolor = cDkGreen, optimize = true> ;
+
     struct {
         ubyte value[DEFAULTS_Effects];
-    }
-    Effects_to_Accel[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Effects_to_Accel[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     ushort Acceleration_Scale[DEFAULTS_Acceleration_length] <bgcolor = cDkGreen> ; // values in [-0.5 - 1.00] range, acceleration 
     struct { // LIB_m_Gain
         ushort value[DEFAULTS_Acceleration_length];
-    }
-    Acceleration[AccelFunctions] <bgcolor = cGreen, optimize = true> ;
+    } Acceleration[AccelFunctions] <bgcolor = cGreen, optimize = true> ;
     struct {
         ubyte value[DEFAULTS_Effects];
-    }
-    Effects_to_Speed[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Effects_to_Speed[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     ushort Speed_Scale[DEFAULTS_Speed_length] <bgcolor = cGreen> ; // values in [0 - 326.39] (km/h) range	
     struct { // LIB_v_Gain
         ushort value[DEFAULTS_Speed_length];
-    }
-    Speed[SpeedFunctions] <bgcolor = cDkGreen, optimize = true> ;
+    } Speed[SpeedFunctions] <bgcolor = cDkGreen, optimize = true> ;
+
     struct {
         ubyte value[DEFAULTS_Effects];
-    }
-    Effects_to_Pedal[Profiles] <bgcolor = cGreen, optimize = true> ;
+    } Effects_to_Pedal[Profiles] <bgcolor = cGreen, optimize = true> ;
+
     ushort Pedal_Scale[DEFAULTS_Pedal_length] <bgcolor = cDkGreen> ;
     struct { // LIB_p_Gain
         ushort value[DEFAULTS_Pedal_length];
-    }
-    Pedal[PedalFunctions] <bgcolor = cGreen, optimize = true> ;
+    } Pedal[PedalFunctions] <bgcolor = cGreen, optimize = true> ;
+
     struct { // MX_Sig
         ubyte value[DEFAULTS_Effects];
-    }
-    Effects_to_Samples[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+    } Effects_to_Samples[Profiles] <bgcolor = cDkGreen, optimize = true> ;
+
     struct { // LIB_Sig
         short value[getIntegerSampleRate(Sample_Rate)];
-    }
-    Samples[Samples_count] <bgcolor = cDkAqua, optimize = true> ;
+    } Samples[Samples_count] <bgcolor = cDkAqua, optimize = true> ;
 
     // Print a report to output 
     Printf("CAR\n");
-    Printf("ID\tPower kW\tunknown_2\tEngine\tVIN\t\tTransmissn\tBody Type\tDrivetrain\tFPA Flag\tunknown_25\tFPA ID\n");
+    Printf("ID\tPower kW\tunknown_2\tEngine\tVIN\t\tTransmissn\tBody Type\tDrivetrain\tFPA Flag\tunknown_25\tProfile ID\n");
 
     for (i = 0; i <Profiles; i++) {
         Printf("%i\t%i\t%i\t%02X\t%s\t%s\t%s\t%s\t%s\t%i\t%i\n",
@@ -471,42 +481,106 @@ void PrintHeader(char name[]) {
     }
 }
 
+ubyte get2HalfByte(ubyte source) {
+    return source >> 4;
+} 
+
+ubyte get1HalfByte(ubyte source) {
+    return source & 0x0F;
+} 
 // SHORT spreadsheets 8x12(16)
 if (GEN25) {
     // WORK IN PROGRESS
     // WORK IN PROGRESS
     // WORK IN PROGRESS
-    Printf("\nSUM_data\n");
-    for (j = 0; j <14; j++) {
-        for (i = 0; i <Profiles; i++) {
-            /*
-            if (j == 0) {
-                Printf("%s\t", getSumEffect(SUM_data[i].value[j]) );
-            } else if (j == 1) {
-                x = (float) SUM_data[i].value[j] / 65536 * getIntegerSampleRate(Sample_Rate) / 4 + 1;
-                Printf("%.3g\t", x);
-            } else if (j> 1 && j <10) {
-                x = (float) SUM_data[i].value[j];
-                Printf("%g\t", x);
-            } else if (j == 10) {
-                x = (float) SUM_data[i].value[j] / 65536 - 1;
-                Printf("%i\t", x);
-            } else if (j == 11) {
+    local int schema_type_byte_position = (Gain_table_flag == 3 ? 4 : 2);
+    local int original_line_length = schema_type_byte_position + 4;
+    local int current_line_length = original_line_length;
+    local int line_counter = 0;
+    j = 0;
+    i = 0;
+
+    Printf("\nMX_Profile\n");
+    Printf("ID\tbyte_1\t");
+    if (schema_type_byte_position == 4) {
+        Printf("byte_2\t");
+        Printf("byte_3\t");
+    }
+    Printf("Schemas\t");
+    Printf("Schema 1\t\t\t\t");
+    Printf("Schema 2\t\t\t\t");
+    Printf("\n");
+
+    do {
+        if (j == 0) {
+            Printf("%i\t", line_counter+1);
+        }
+        j++;
+        if (j == schema_type_byte_position && MX_Profile[i] > 0) {
+            current_line_length +=4;    
+        }
+
+        if ( j == schema_type_byte_position ) {
+            if (MX_Profile[i] == 0) {
+                Printf("B\t");
+            } else if (MX_Profile[i] == 8) {
+                Printf("BK\t");
+            } else {
+                Printf("(%i) unknown\t", MX_Profile[i]);
+            }
+        } else {
+            if ( j < schema_type_byte_position ) {
+                Printf("[ %02i   %02i ]\t", get1HalfByte(MX_Profile[i]), get2HalfByte(MX_Profile[i]) );            
+            } else {
+                if ( j == schema_type_byte_position + 1 || 
+                     j == schema_type_byte_position + 5 
+                ) {
+                    Printf("[ ");        
+                }
+                if ( j == schema_type_byte_position + 4 || 
+                     j == schema_type_byte_position + 8 
+                ) {
+                    Printf("%02i ]   \t", get1HalfByte(MX_Profile[i]) + 1); // skip 8th unused half-byte            
+                } else {
+                    Printf("%02i   %02i   ", get1HalfByte(MX_Profile[i]) + 1, get2HalfByte(MX_Profile[i]) + 1);            
+                }                
+
+            }
+        }
+
+        if (j == current_line_length) {
+            Printf("\n");
+            line_counter++;
+            j = 0;
+            current_line_length = original_line_length;    
+        }
+        i++;
+    } while (line_counter < 8);
+
+    // WORK IN PROGRESS
+    // WORK IN PROGRESS
+    // WORK IN PROGRESS	
+	Printf("\nSUM_data\n");
+    for ( j = 0; j < SUM_x; j++ ) {
+        for( i = 0; i < Profiles; i++ ) {
+            if (j == SUM_x-3) {
                 x = (float) SUM_data[i].value[j] / 65536;
                 Printf("%.2g\t", x);
-            } else if (j == 12) {
+            } else if (j == SUM_x-2) {
                 x = (float) SUM_data[i].value[j] / 2048 * 16;
                 Printf("%.2g\t", x);
-            } else if (j == 13) {
+            } else if (j == SUM_x-1) {
                 x = (float) SUM_data[i].value[j] / 2048 * 8;
                 Printf("%.2g\t", x);
-            } else { */
-            x = (float) SUM_data[i].value[j];
-            Printf("%g\t", x);
-            // }
+            } else { 
+                x = (float) SUM_data[i].value[j] ;
+                Printf("%g\t", x);
+            }
         }
         Printf("\n");
     };
+    // WORK IN PROGRESS
+    // WORK IN PROGRESS
     // WORK IN PROGRESS
 }
 
@@ -678,8 +752,11 @@ for( i = 0; i <getIntegerSampleRate(Sample_Rate); i++ ) {
 }
 */
 
-for (k = start; k <end; k += 2) {
-    checksum = checksum + ReadUShort(k);
+local int checksum = -1;
+for (j = start;j < end; j += 2) {
+    checksum = checksum + ReadUShort(j);
 }
 checksum = (checksum & 0xffff) ^ 0xffff;
-Printf("\nCHECKSUM: %.04X \n\n", SwapBytes(checksum)>> 16 & 0x0000ffff);
+local int xls_checksum = Checksum(CHECKSUM_CRCCCITT, 64, 64, -1, -1); // algo, size, length, poly, init 
+Printf("\nXLS  CHECKSUM: %.04X", SwapBytes(xls_checksum) >> 16 & 0x0000ffff);  
+Printf("\nFILE CHECKSUM: %.04X", SwapBytes(checksum) >> 16 & 0x0000ffff);  
