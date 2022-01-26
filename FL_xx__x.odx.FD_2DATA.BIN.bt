@@ -298,10 +298,9 @@ if (!GEN25) {
         Effects_to_Profiles[Profiles] <bgcolor = cGreen, optimize = true> ;
     }
     struct {
-        ushort gain[Samples_count];
-        ushort clip[Samples_count];
-    }
-    Effects_to_Samples <bgcolor = cDkGreen> ;
+        ushort gain[Profiles];
+        ushort clip[Profiles];
+    } Effects_to_Samples <bgcolor = cDkGreen> ;
 
     ushort Acceleration_Scale[DEFAULTS_Acceleration_length] <bgcolor = cGreen> ; // values in [-0.3 - 0.98] range (5F 0003 fw) / [-0.4 - 1.00] range (565 AGA fw)
     ushort Revolutions_Scale[DEFAULTS_Revolutions_length] <bgcolor = cDkGreen> ; // values in [500 - 8150] (rpm) range quanified by 16256
@@ -617,7 +616,7 @@ if (GEN25) {
     }
 
     PrintHeader("Effects_to_Samples (MX_Sig)");
-    for (j = 0; j <8; j++) {
+    for (j = 0; j < 8; j++) {
         Printf("%.3g\t", (float) Effects_to_Samples.gain[j] / 0xffff * 2); // 0 <X <1 // Q:65536
     }
     Printf("GAIN");
