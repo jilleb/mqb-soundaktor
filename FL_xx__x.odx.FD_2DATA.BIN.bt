@@ -139,8 +139,8 @@ int getIntegerSampleRate(int sampleRate) {
 string getSumEffect(int effectNumber) {
     switch (effectNumber) {
     case 0: return "Bypass";
-    case 1: return "Tiefpass";
-    case 2: return "Hochpass";
+    case 1: return "Lowpass";
+    case 2: return "Highpass";
     case 3: return "Bandpass";
     case 4: return "Notch";
     case 5: return "Peak";
