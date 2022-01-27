@@ -3,7 +3,7 @@
 //
 //      File: FL_xx__x.odx.FD_2DATA.BIN
 //   Authors: Jille, Dark
-//   Version: 0.9.8
+//   Version: 0.9.9
 //   Purpose: Parse the contents of the MQB soundaktor firmware
 //  Category: 
 // File Mask: 
@@ -146,6 +146,22 @@ string getSumEffect(int effectNumber) {
     case 5: return "Peak";
     case 6: return "LowShelf";
     case 7: return "HighShelf";
+    default: return "Unknown";
+    }
+}
+
+
+string getSchemaType (char value){
+    switch (value) {
+    case "B": return "Basic";
+    case "M": return "Motorization";
+    case "H": return "ACT";
+    case "HM": return "ACT Motorization";
+    case "C": return "Cabrio";
+    case "CM": return "Cabrio Motorization";
+    case "CH": return "Cabrio ACT";
+    case "CHM": return "Cabrio ACT Motorization";
+//todo: add more
     default: return "Unknown";
     }
 }
