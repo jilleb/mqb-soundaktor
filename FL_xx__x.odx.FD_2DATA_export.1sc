@@ -1,0 +1,90 @@
+/*-------------- 010 Editor Script --------------
+File:        FL_xx__x.odx.FD_2DATA_export.1sc
+Author:      Jille, Mr. MIBonk 
+Purpose:     VAG Soundaktor
+Revision:    Flashfile mod 
+Version:     1.3
+-----------------------------------------------*/
+
+string saveFolder, saveUName, saveVersion, Version, VIN1;
+int actfile, newfile, index, VersionLength, VINLength;
+int64 siz;
+const string title = "Export data";
+
+//  config part start ---------------------------------------------------------------------------> 
+VIN1 = "";
+// <----------------------------------------------------------------------------- config part end
+
+FileSelect(actfile);
+siz = FileSize();
+
+if (FileCount() == 0) {
+  MessageBox(idOk, title, "No file is open.");
+  return -1;
+}
+
+if (siz == 0) {
+  MessageBox(idOk, title, "No bytes to process.");
+  return -1;
+}
+
+saveFolder = InputDirectory("Save dataset to", "%UserProfile%\\Desktop\\");
+saveUName = InputString("File name", "add comment", "VAG Soundaktor");
+Version = ReadString(0x40, 49);
+saveVersion = InputString("Version name", "add max. 49 signs", Version);
+
+VersionLength = WStrlen(saveVersion);
+if (VersionLength > 0) {
+    if (VersionLength < 50) {
+        WriteString(0x40, saveVersion);
+    }
+}
+
+VINLength = WStrlen(VIN1); 
+if (VINLength == 17) {
+    WriteString(0x91, VIN1);
+}
+
+local int j = 0;
+local int start = 0x02;
+local int end = 0xE000;
+local int checksum = -1;
+
+local int xls_checksum = Checksum(CHECKSUM_CRCCCITT, 0x40, 64, -1, -1);
+WriteShort(0x3E, xls_checksum);
+
+for (j = start;j < end; j += 2) {
+    checksum = checksum + ReadUShort(j);
+}
+
+checksum = (checksum & 0xffff) ^ 0xffff;
+WriteShort(0x0, checksum);
+
+local uint32 calculated_checksum = Checksum(CHECKSUM_CRC32, 0x0, siz, 0xEDB88320, 0);
+calculated_checksum = ~calculated_checksum;
+string crccalc = Str("%.08X", calculated_checksum);  
+
+char tmp;
+string s, sDataset;
+
+while (index <= siz - 1) {
+  s = "";
+  tmp = ReadByte(index);
+  SPrintf(s, "%.2X", tmp & 0xFF);
+  sDataset += s;
+  index++;
+}
+
+newfile = FileNew();
+FileSelect(newfile);
+
+sDataset = "FL_xx__x.odx.FD_2DATA_export.1sc -> " + saveUName + "\n\n" + "CRC32 ADLATUS -> " + crccalc + "\n\n" + sDataset;
+WriteString(0, sDataset);
+string filename = saveFolder + saveUName + "_" + GetCurrentDateTime("yyyyMMdd_hhmmss") + ".txt";
+
+FileSave(filename);
+FileClose();
+
+Printf("\nXLS CHECKSUM: %.04X", SwapBytes(xls_checksum) >> 16 & 0x0000ffff);  
+Printf("\nXOR CHECKSUM: %.04X", SwapBytes(checksum) >> 16 & 0x0000ffff);  
+Printf("\nCRC CHECKSUM: %.08X", calculated_checksum);
