@@ -29,7 +29,7 @@ The place where the entire dataset is described and explored. Check it out [here
 
 ## Contributing
 
-Everyone can contribute to this project in some way. You can make your own dataset changes and test them, and report back. If you have any suggestions or chagnes to the template or script, feel free to make a pull request.
+Everyone can contribute to this project in some way. You can make your own dataset changes and test them, and report back. If you have any suggestions or changes to the template or script, feel free to make a pull request. Also, if you have any firmwares that aren't already on this repository, please share them!
 
 ## Disclaimer
 
