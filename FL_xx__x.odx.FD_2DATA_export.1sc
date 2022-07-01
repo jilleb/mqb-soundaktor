@@ -47,7 +47,7 @@ if (VINLength == 17) {
 
 local int j = 0;
 local int start = 0x02;
-local int end = 0xE000;
+local int end = siz;
 local int checksum = -1;
 
 local int xls_checksum = Checksum(CHECKSUM_CRCCCITT, 0x40, 64, -1, -1);

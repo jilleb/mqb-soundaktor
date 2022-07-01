@@ -4,7 +4,9 @@ The soundaktor (German for "sound actuator") is a vehicle audio system used to s
 
 ![Soundaktor](https://github.com/jilleb/mqb-soundaktor/blob/9e37063de8729258620701f0f63c91376dcf7cd0/images/soundaktor.png)
 
-This repository is meant to research the details inside the soundaktor firmware, in specific the FL_xx__x.odx.FD_2DATA.BIN file. 
+This repository is meant to research the details inside the soundaktor firmware, in specific the FL_xx__x.odx.FD_2DATA.BIN file.
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jille)
 
 
 ## Requirements
@@ -25,7 +27,7 @@ This is the main template, which can parse raw binary data from a dataset in 010
 
 
 ## Wiki
-The place where the entire dataset is described and explored. Check it out [here](../..//wiki).
+The place where the entire dataset is described and explored. Firmware downloads can be found there as well. Check it out [here](../..//wiki). 
 
 ## Contributing
 
